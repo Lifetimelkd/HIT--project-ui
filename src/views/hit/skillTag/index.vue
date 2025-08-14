@@ -55,11 +55,7 @@
           </template>
 
           <div class="hot-tags-list">
-            <div
-              v-for="(tag, index) in hotTagsList"
-              :key="tag.tagId"
-              class="hot-tag-item"
-            >
+            <div v-for="(tag, index) in hotTagsList" :key="tag.tagId" class="hot-tag-item">
               <div class="rank-badge" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
               <div class="tag-info">
                 <div class="tag-name">{{ tag.tagName }}</div>
@@ -85,7 +81,7 @@
             </div>
           </template>
 
-          <div id="categoryChart" style="width: 100%; height: 250px;"></div>
+          <div id="categoryChart" style="width: 100%; height: 250px"></div>
         </el-card>
       </div>
 
@@ -94,17 +90,12 @@
         <!-- 操作栏 -->
         <el-card class="tag-action-card" shadow="hover">
           <div class="action-header">
-            <el-input
-              v-model="searchKeyword"
-              placeholder="搜索标签..."
-              style="width: 300px;"
-              clearable
-            >
+            <el-input v-model="searchKeyword" placeholder="搜索标签..." style="width: 300px" clearable>
               <template #prefix>
                 <el-icon><Search /></el-icon>
               </template>
             </el-input>
-            
+
             <div class="action-buttons">
               <el-button type="primary" @click="handleAddTag">
                 <el-icon><Plus /></el-icon>
@@ -139,7 +130,7 @@
           <div class="filter-options">
             <el-checkbox v-model="showHotOnly">仅显示热门标签</el-checkbox>
             <el-checkbox v-model="showParentOnly">仅显示父级标签</el-checkbox>
-            <el-select v-model="sortBy" placeholder="排序方式" style="width: 120px; margin-left: 12px;">
+            <el-select v-model="sortBy" placeholder="排序方式" style="width: 120px; margin-left: 12px">
               <el-option label="使用次数" value="useCount" />
               <el-option label="创建时间" value="createTime" />
               <el-option label="标签名称" value="tagName" />
@@ -157,19 +148,11 @@
               </span>
               <div class="view-options">
                 <el-button-group>
-                  <el-button
-                    :type="viewMode === 'tree' ? 'primary' : ''"
-                    @click="viewMode = 'tree'"
-                    size="small"
-                  >
+                  <el-button :type="viewMode === 'tree' ? 'primary' : ''" @click="viewMode = 'tree'" size="small">
                     <el-icon><Grid /></el-icon>
                     树形
                   </el-button>
-                  <el-button
-                    :type="viewMode === 'list' ? 'primary' : ''"
-                    @click="viewMode = 'list'"
-                    size="small"
-                  >
+                  <el-button :type="viewMode === 'list' ? 'primary' : ''" @click="viewMode = 'list'" size="small">
                     <el-icon><List /></el-icon>
                     列表
                   </el-button>
@@ -185,26 +168,12 @@
 
           <!-- 树形视图 -->
           <div v-else-if="viewMode === 'tree'" class="tree-view">
-            <el-tree
-              v-if="treeData.length > 0"
-              :data="treeData"
-              :props="treeProps"
-              :expand-on-click-node="false"
-              default-expand-all
-              class="tag-tree"
-            >
+            <el-tree v-if="treeData.length > 0" :data="treeData" :props="treeProps" :expand-on-click-node="false" default-expand-all class="tag-tree">
               <template #default="{ node, data }">
                 <div class="tree-node">
                   <div class="node-content">
                     <span class="node-label">{{ data.tagName }}</span>
-                    <el-tag
-                      v-if="data.isHot"
-                      type="warning"
-                      size="small"
-                      class="hot-badge"
-                    >
-                      热门
-                    </el-tag>
+                    <el-tag v-if="data.isHot" type="warning" size="small" class="hot-badge"> 热门 </el-tag>
                     <span class="use-count">({{ data.useCount }})</span>
                   </div>
                   <div class="node-actions">
@@ -230,12 +199,7 @@
           <!-- 列表视图 -->
           <div v-else class="list-view">
             <div v-if="filteredTags.length > 0" class="tag-grid">
-              <div
-                v-for="tag in filteredTags"
-                :key="tag.tagId"
-                class="tag-item"
-                :class="{ 'is-hot': tag.isHot }"
-              >
+              <div v-for="tag in filteredTags" :key="tag.tagId" class="tag-item" :class="{ 'is-hot': tag.isHot }">
                 <div class="tag-header">
                   <div class="tag-name">{{ tag.tagName }}</div>
                   <div class="tag-actions">
@@ -247,9 +211,9 @@
                     </el-button>
                   </div>
                 </div>
-                
+
                 <div class="tag-category">{{ getTagCategory(tag.tagCategory) }}</div>
-                
+
                 <div class="tag-stats">
                   <div class="stat">
                     <el-icon><User /></el-icon>
@@ -292,30 +256,15 @@
     </div>
 
     <!-- 添加/编辑标签对话框 -->
-    <el-dialog
-      v-model="tagDialogVisible"
-      :title="isEdit ? '编辑标签' : '添加标签'"
-      width="600px"
-      @close="handleDialogClose"
-    >
-      <el-form
-        ref="tagFormRef"
-        :model="tagForm"
-        :rules="tagRules"
-        label-width="100px"
-      >
+    <el-dialog v-model="tagDialogVisible" :title="isEdit ? '编辑标签' : '添加标签'" width="600px" @close="handleDialogClose">
+      <el-form ref="tagFormRef" :model="tagForm" :rules="tagRules" label-width="100px">
         <el-form-item label="标签名称" prop="tagName">
           <el-input v-model="tagForm.tagName" placeholder="请输入标签名称" />
         </el-form-item>
 
         <el-form-item label="标签分类" prop="tagCategory">
           <el-select v-model="tagForm.tagCategory" placeholder="请选择标签分类" style="width: 100%">
-            <el-option
-              v-for="category in tagCategories.slice(1)"
-              :key="category.value"
-              :label="category.label"
-              :value="category.value"
-            />
+            <el-option v-for="category in tagCategories.slice(1)" :key="category.value" :label="category.label" :value="category.value" />
           </el-select>
         </el-form-item>
 
@@ -343,21 +292,11 @@
         </el-form-item>
 
         <el-form-item label="热门标签" prop="isHot">
-          <el-switch
-            v-model="tagForm.isHot"
-            active-text="是"
-            inactive-text="否"
-          />
+          <el-switch v-model="tagForm.isHot" active-text="是" inactive-text="否" />
         </el-form-item>
 
         <el-form-item label="排序权重" prop="sortOrder">
-          <el-input-number
-            v-model="tagForm.sortOrder"
-            :min="0"
-            :max="999"
-            placeholder="数值越大排序越靠前"
-            style="width: 100%"
-          />
+          <el-input-number v-model="tagForm.sortOrder" :min="0" :max="999" placeholder="数值越大排序越靠前" style="width: 100%" />
         </el-form-item>
       </el-form>
 
@@ -374,13 +313,29 @@
 </template>
 
 <script setup lang="ts" name="SkillTag">
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import {
-  PriceTag, DataAnalysis, TrendCharts, PieChart, Search, Plus, Upload, Download,
-  List, Grid, Edit, Delete, User, Connection, Star, CaretTop, CaretBottom, Minus
-} from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+  PriceTag,
+  DataAnalysis,
+  TrendCharts,
+  PieChart,
+  Search,
+  Plus,
+  Upload,
+  Download,
+  List,
+  Grid,
+  Edit,
+  Delete,
+  User,
+  Connection,
+  Star,
+  CaretTop,
+  CaretBottom,
+  Minus
+} from '@element-plus/icons-vue';
+import * as echarts from 'echarts';
 import {
   getSkillTagList,
   getSkillTag,
@@ -390,20 +345,20 @@ import {
   getHotTags,
   getTagsByCategory,
   increaseUseCount
-} from '@/api/hit/skillTag'
+} from '@/api/hit/skillTag';
 
 // 响应式数据
-const searchKeyword = ref('')
-const activeCategory = ref('all')
-const showHotOnly = ref(false)
-const showParentOnly = ref(false)
-const sortBy = ref('useCount')
-const viewMode = ref('list')
-const tagDialogVisible = ref(false)
-const isEdit = ref(false)
-const loading = ref(false)
-const tagFormRef = ref()
-const parentTagToAdd = ref(null)
+const searchKeyword = ref('');
+const activeCategory = ref('all');
+const showHotOnly = ref(false);
+const showParentOnly = ref(false);
+const sortBy = ref('useCount');
+const viewMode = ref('list');
+const tagDialogVisible = ref(false);
+const isEdit = ref(false);
+const loading = ref(false);
+const tagFormRef = ref();
+const parentTagToAdd = ref(null);
 
 // 标签表单数据
 const tagForm = reactive({
@@ -414,7 +369,7 @@ const tagForm = reactive({
   description: '',
   isHot: false,
   sortOrder: 0
-})
+});
 
 // 标签分类
 const tagCategories = [
@@ -427,19 +382,19 @@ const tagCategories = [
   { label: '工具软件', value: 'tools' },
   { label: '软技能', value: 'soft_skill' },
   { label: '行业领域', value: 'industry' }
-]
+];
 
 // 标签列表数据
-const tagList = ref([])
+const tagList = ref([]);
 
 // 加载技能标签数据
 const loadTagData = async () => {
   try {
-    loading.value = true
-    const response = await getSkillTagList()
+    loading.value = true;
+    const response = await getSkillTagList();
     if (response && response.code === 200) {
       // 转换后端数据格式
-      tagList.value = (response.rows || []).map(item => ({
+      tagList.value = (response.rows || []).map((item) => ({
         tagId: item.tagId,
         tagName: item.tagName,
         tagCategory: item.tagCategory,
@@ -452,180 +407,175 @@ const loadTagData = async () => {
         weeklyChange: item.weeklyChange || 0,
         createTime: item.createTime,
         status: item.status
-      }))
-      console.log('技能标签数据加载完成:', tagList.value)
+      }));
+      console.log('技能标签数据加载完成:', tagList.value);
     } else {
-      console.error('获取技能标签数据失败:', response?.msg || '未知错误')
-      ElMessage.error(response?.msg || '获取技能标签数据失败')
+      console.error('获取技能标签数据失败:', response?.msg || '未知错误');
+      ElMessage.error(response?.msg || '获取技能标签数据失败');
     }
   } catch (error) {
-    console.error('加载技能标签数据失败:', error)
-    ElMessage.error('加载技能标签数据失败，请稍后重试')
+    console.error('加载技能标签数据失败:', error);
+    ElMessage.error('加载技能标签数据失败，请稍后重试');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 表单验证规则
 const tagRules = reactive({
   tagName: [{ required: true, message: '请输入标签名称', trigger: 'blur' }],
   tagCategory: [{ required: true, message: '请选择标签分类', trigger: 'change' }]
-})
+});
 
 // 树形数据配置
 const treeProps = {
   children: 'children',
   label: 'tagName'
-}
+};
 
 // 计算属性
 const filteredTags = computed(() => {
-  let result = tagList.value
+  let result = tagList.value;
 
   // 分类筛选
   if (activeCategory.value !== 'all') {
-    result = result.filter(tag => tag.tagCategory === activeCategory.value)
+    result = result.filter((tag) => tag.tagCategory === activeCategory.value);
   }
 
   // 关键词搜索
   if (searchKeyword.value) {
-    result = result.filter(tag =>
-      tag.tagName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      tag.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    )
+    result = result.filter(
+      (tag) =>
+        tag.tagName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+        tag.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    );
   }
 
   // 热门标签筛选
   if (showHotOnly.value) {
-    result = result.filter(tag => tag.isHot)
+    result = result.filter((tag) => tag.isHot);
   }
 
   // 父级标签筛选
   if (showParentOnly.value) {
-    result = result.filter(tag => !tag.parentId)
+    result = result.filter((tag) => !tag.parentId);
   }
 
   // 排序
   result = result.sort((a, b) => {
     if (sortBy.value === 'useCount') {
-      return b.useCount - a.useCount
+      return b.useCount - a.useCount;
     } else if (sortBy.value === 'createTime') {
-      return new Date(b.createTime).getTime() - new Date(a.createTime).getTime()
+      return new Date(b.createTime).getTime() - new Date(a.createTime).getTime();
     } else {
-      return a.tagName.localeCompare(b.tagName)
+      return a.tagName.localeCompare(b.tagName);
     }
-  })
+  });
 
-  return result
-})
+  return result;
+});
 
 const treeData = computed(() => {
   const buildTree = (tags, parentId = null) => {
     return tags
-      .filter(tag => tag.parentId === parentId)
-      .map(tag => ({
+      .filter((tag) => tag.parentId === parentId)
+      .map((tag) => ({
         ...tag,
         children: buildTree(tags, tag.tagId)
-      }))
-  }
-  return buildTree(tagList.value)
-})
+      }));
+  };
+  return buildTree(tagList.value);
+});
 
 const parentTagOptions = computed(() => {
-  return tagList.value.filter(tag => !tag.parentId)
-})
+  return tagList.value.filter((tag) => !tag.parentId);
+});
 
 const tagStats = computed(() => {
-  const total = tagList.value.length
-  const hot = tagList.value.filter(tag => tag.isHot).length
-  const categories = new Set(tagList.value.map(tag => tag.tagCategory)).size
-  const avgUse = total > 0 
-    ? Math.round(tagList.value.reduce((sum, tag) => sum + tag.useCount, 0) / total)
-    : 0
+  const total = tagList.value.length;
+  const hot = tagList.value.filter((tag) => tag.isHot).length;
+  const categories = new Set(tagList.value.map((tag) => tag.tagCategory)).size;
+  const avgUse = total > 0 ? Math.round(tagList.value.reduce((sum, tag) => sum + tag.useCount, 0) / total) : 0;
 
   return {
     totalTags: total,
     hotTags: hot,
     categories,
     avgUseCount: avgUse
-  }
-})
+  };
+});
 
 const hotTagsList = computed(() => {
   return tagList.value
-    .filter(tag => tag.isHot)
+    .filter((tag) => tag.isHot)
     .sort((a, b) => b.useCount - a.useCount)
-    .slice(0, 5)
-})
+    .slice(0, 5);
+});
 
 // 方法
 const getTagCategory = (category: string) => {
-  const categoryObj = tagCategories.find(c => c.value === category)
-  return categoryObj ? categoryObj.label : category
-}
+  const categoryObj = tagCategories.find((c) => c.value === category);
+  return categoryObj ? categoryObj.label : category;
+};
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString()
-}
+  return new Date(dateStr).toLocaleDateString();
+};
 
 const handleCategoryFilter = (category: string) => {
-  activeCategory.value = category
-}
+  activeCategory.value = category;
+};
 
 const handleAddTag = () => {
-  isEdit.value = false
-  parentTagToAdd.value = null
-  resetTagForm()
-  tagDialogVisible.value = true
-}
+  isEdit.value = false;
+  parentTagToAdd.value = null;
+  resetTagForm();
+  tagDialogVisible.value = true;
+};
 
 const handleAddChild = (parentTag: any) => {
-  isEdit.value = false
-  parentTagToAdd.value = parentTag
-  resetTagForm()
-  tagForm.parentId = parentTag.tagId
-  tagForm.tagCategory = parentTag.tagCategory
-  tagDialogVisible.value = true
-}
+  isEdit.value = false;
+  parentTagToAdd.value = parentTag;
+  resetTagForm();
+  tagForm.parentId = parentTag.tagId;
+  tagForm.tagCategory = parentTag.tagCategory;
+  tagDialogVisible.value = true;
+};
 
 const handleEditTag = (tag: any) => {
-  isEdit.value = true
-  Object.assign(tagForm, tag)
-  tagDialogVisible.value = true
-}
+  isEdit.value = true;
+  Object.assign(tagForm, tag);
+  tagDialogVisible.value = true;
+};
 
 const handleDeleteTag = async (tag: any) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除标签"${tag.tagName}"吗？删除后无法恢复。`,
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
+    await ElMessageBox.confirm(`确定要删除标签"${tag.tagName}"吗？删除后无法恢复。`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
 
-    const response = await delSkillTag([tag.tagId])
+    const response = await delSkillTag([tag.tagId]);
     if (response && response.code === 200) {
-      ElMessage.success('删除成功')
-      await loadTagData() // 重新加载数据
-      updateCategoryChart()
+      ElMessage.success('删除成功');
+      await loadTagData(); // 重新加载数据
+      updateCategoryChart();
     } else {
-      ElMessage.error(response?.msg || '删除失败')
+      ElMessage.error(response?.msg || '删除失败');
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除失败:', error)
-      ElMessage.error('删除失败')
+      console.error('删除失败:', error);
+      ElMessage.error('删除失败');
     }
   }
-}
+};
 
 const handleSaveTag = async () => {
   try {
-    await tagFormRef.value.validate()
-    loading.value = true
+    await tagFormRef.value.validate();
+    loading.value = true;
 
     // 转换前端数据格式到后端格式
     const tagData = {
@@ -636,36 +586,36 @@ const handleSaveTag = async () => {
       description: tagForm.description,
       isHot: tagForm.isHot,
       orderNum: tagForm.sortOrder
-    }
+    };
 
-    let response
+    let response;
     if (isEdit.value) {
       // 更新标签
-      response = await updateSkillTag(tagData)
+      response = await updateSkillTag(tagData);
     } else {
       // 添加标签
-      response = await addSkillTag(tagData)
+      response = await addSkillTag(tagData);
     }
 
     if (response && response.code === 200) {
-      ElMessage.success(isEdit.value ? '标签更新成功' : '标签添加成功')
-      tagDialogVisible.value = false
-      await loadTagData() // 重新加载数据
-      updateCategoryChart()
+      ElMessage.success(isEdit.value ? '标签更新成功' : '标签添加成功');
+      tagDialogVisible.value = false;
+      await loadTagData(); // 重新加载数据
+      updateCategoryChart();
     } else {
-      ElMessage.error(response?.msg || '保存失败')
+      ElMessage.error(response?.msg || '保存失败');
     }
   } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error('保存失败')
+    console.error('保存失败:', error);
+    ElMessage.error('保存失败');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleDialogClose = () => {
-  resetTagForm()
-}
+  resetTagForm();
+};
 
 const resetTagForm = () => {
   Object.assign(tagForm, {
@@ -676,43 +626,46 @@ const resetTagForm = () => {
     description: '',
     isHot: false,
     sortOrder: 0
-  })
-}
+  });
+};
 
 const handleBatchImport = () => {
-  ElMessage.info('批量导入功能开发中...')
-}
+  ElMessage.info('批量导入功能开发中...');
+};
 
 const handleExport = () => {
-  ElMessage.info('导出功能开发中...')
-}
+  ElMessage.info('导出功能开发中...');
+};
 
 // 初始化分类分布图
 const initCategoryChart = () => {
   nextTick(() => {
-    const chartDom = document.getElementById('categoryChart')
-    if (!chartDom) return
+    const chartDom = document.getElementById('categoryChart');
+    if (!chartDom) return;
 
-    const myChart = echarts.init(chartDom)
-    updateCategoryChart(myChart)
-  })
-}
+    const myChart = echarts.init(chartDom);
+    updateCategoryChart(myChart);
+  });
+};
 
 const updateCategoryChart = (chart?: any) => {
-  const chartDom = document.getElementById('categoryChart')
-  if (!chartDom) return
+  const chartDom = document.getElementById('categoryChart');
+  if (!chartDom) return;
 
-  const myChart = chart || echarts.getInstanceByDom(chartDom)
-  if (!myChart) return
+  const myChart = chart || echarts.getInstanceByDom(chartDom);
+  if (!myChart) return;
 
   // 统计各分类的标签数量
-  const categoryStats = tagCategories.slice(1).map(category => {
-    const count = tagList.value.filter(tag => tag.tagCategory === category.value).length
-    return {
-      name: category.label,
-      value: count
-    }
-  }).filter(item => item.value > 0)
+  const categoryStats = tagCategories
+    .slice(1)
+    .map((category) => {
+      const count = tagList.value.filter((tag) => tag.tagCategory === category.value).length;
+      return {
+        name: category.label,
+        value: count
+      };
+    })
+    .filter((item) => item.value > 0);
 
   const option = {
     tooltip: {
@@ -739,22 +692,22 @@ const updateCategoryChart = (chart?: any) => {
         }
       }
     ]
-  }
+  };
 
-  myChart.setOption(option)
-}
+  myChart.setOption(option);
+};
 
 // 生命周期
 onMounted(async () => {
-  console.log('技能标签页面开始加载...')
+  console.log('技能标签页面开始加载...');
   try {
-    await loadTagData() // 加载数据
-    initCategoryChart()
-    console.log('技能标签页面加载完成')
+    await loadTagData(); // 加载数据
+    initCategoryChart();
+    console.log('技能标签页面加载完成');
   } catch (error) {
-    console.error('技能标签页面加载失败:', error)
+    console.error('技能标签页面加载失败:', error);
   }
-})
+});
 </script>
 
 <style scoped lang="scss">
@@ -780,7 +733,7 @@ onMounted(async () => {
 
       .title-icon {
         margin-right: 12px;
-        color: #005BAC;
+        color: #005bac;
       }
     }
 
@@ -814,7 +767,7 @@ onMounted(async () => {
             .stat-value {
               font-size: 24px;
               font-weight: 600;
-              color: #005BAC;
+              color: #005bac;
               margin-bottom: 4px;
             }
 
@@ -852,10 +805,19 @@ onMounted(async () => {
               font-size: 12px;
               margin-right: 12px;
 
-              &.rank-1 { background-color: #f56c6c; }
-              &.rank-2 { background-color: #e6a23c; }
-              &.rank-3 { background-color: #409eff; }
-              &.rank-4, &.rank-5 { background-color: #909399; }
+              &.rank-1 {
+                background-color: #f56c6c;
+              }
+              &.rank-2 {
+                background-color: #e6a23c;
+              }
+              &.rank-3 {
+                background-color: #409eff;
+              }
+              &.rank-4,
+              &.rank-5 {
+                background-color: #909399;
+              }
             }
 
             .tag-info {
@@ -874,9 +836,15 @@ onMounted(async () => {
             }
 
             .tag-trend {
-              .trend-up { color: #67c23a; }
-              .trend-down { color: #f56c6c; }
-              .trend-stable { color: #909399; }
+              .trend-up {
+                color: #67c23a;
+              }
+              .trend-down {
+                color: #f56c6c;
+              }
+              .trend-stable {
+                color: #909399;
+              }
             }
           }
         }
@@ -945,7 +913,7 @@ onMounted(async () => {
 
             .el-icon {
               margin-right: 8px;
-              color: #005BAC;
+              color: #005bac;
             }
           }
         }
@@ -1006,7 +974,7 @@ onMounted(async () => {
               background: white;
 
               &:hover {
-                border-color: #005BAC;
+                border-color: #005bac;
                 box-shadow: 0 2px 12px rgba(0, 91, 172, 0.1);
               }
 
@@ -1062,7 +1030,7 @@ onMounted(async () => {
                   color: #606266;
 
                   .el-icon {
-                    color: #005BAC;
+                    color: #005bac;
                   }
                 }
               }
@@ -1086,9 +1054,15 @@ onMounted(async () => {
                   align-items: center;
                   gap: 4px;
 
-                  .trend-up { color: #67c23a; }
-                  .trend-down { color: #f56c6c; }
-                  .trend-stable { color: #909399; }
+                  .trend-up {
+                    color: #67c23a;
+                  }
+                  .trend-down {
+                    color: #f56c6c;
+                  }
+                  .trend-stable {
+                    color: #909399;
+                  }
                 }
               }
             }
@@ -1112,9 +1086,9 @@ onMounted(async () => {
 
       .el-icon {
         margin-right: 8px;
-        color: #005BAC;
+        color: #005bac;
       }
     }
   }
 }
-</style> 
+</style>

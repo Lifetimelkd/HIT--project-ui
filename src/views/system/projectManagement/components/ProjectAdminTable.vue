@@ -6,7 +6,7 @@
         <el-input
           v-model="queryParams.projectName"
           placeholder="搜索项目名称"
-          style="width: 200px;"
+          style="width: 200px"
           clearable
           @clear="handleQuery"
           @keyup.enter="handleQuery"
@@ -15,69 +15,45 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        
-        <el-select
-          v-model="queryParams.projectType"
-          placeholder="项目类型"
-          style="width: 120px; margin-left: 10px;"
-          clearable
-          @change="handleQuery"
-        >
+
+        <el-select v-model="queryParams.projectType" placeholder="项目类型" style="width: 120px; margin-left: 10px" clearable @change="handleQuery">
           <el-option label="学术研究" value="academic" />
           <el-option label="竞赛项目" value="competition" />
           <el-option label="实践项目" value="practice" />
           <el-option label="毕业设计" value="graduation" />
           <el-option label="课程项目" value="course" />
         </el-select>
-        
-        <el-select
-          v-model="queryParams.status"
-          placeholder="项目状态"
-          style="width: 120px; margin-left: 10px;"
-          clearable
-          @change="handleQuery"
-        >
+
+        <el-select v-model="queryParams.status" placeholder="项目状态" style="width: 120px; margin-left: 10px" clearable @change="handleQuery">
           <el-option label="进行中" value="active" />
           <el-option label="已暂停" value="paused" />
           <el-option label="已完成" value="completed" />
           <el-option label="已取消" value="cancelled" />
         </el-select>
-        
-        <el-button type="primary" @click="handleQuery" style="margin-left: 10px;">
+
+        <el-button type="primary" @click="handleQuery" style="margin-left: 10px">
           <el-icon><Search /></el-icon>
           搜索
         </el-button>
-        
-        <el-button @click="resetQuery" style="margin-left: 10px;">
+
+        <el-button @click="resetQuery" style="margin-left: 10px">
           <el-icon><Refresh /></el-icon>
           重置
         </el-button>
       </div>
-      
+
       <div class="action-area">
-        <el-button
-          type="success"
-          @click="handleExport"
-          :loading="exportLoading"
-        >
+        <el-button type="success" @click="handleExport" :loading="exportLoading">
           <el-icon><Download /></el-icon>
           导出
         </el-button>
-        
-        <el-button
-          type="danger"
-          @click="handleBatchDelete"
-          :disabled="selectedProjects.length === 0"
-        >
+
+        <el-button type="danger" @click="handleBatchDelete" :disabled="selectedProjects.length === 0">
           <el-icon><Delete /></el-icon>
           批量删除
         </el-button>
-        
-        <el-button
-          type="warning"
-          @click="handleBatchOperation"
-          :disabled="selectedProjects.length === 0"
-        >
+
+        <el-button type="warning" @click="handleBatchOperation" :disabled="selectedProjects.length === 0">
           <el-icon><Operation /></el-icon>
           批量操作
         </el-button>
@@ -85,27 +61,15 @@
     </div>
 
     <!-- 数据表格 -->
-    <el-table
-      v-loading="loading"
-      :data="projectList"
-      @selection-change="handleSelectionChange"
-      row-key="projectId"
-      border
-      stripe
-    >
+    <el-table v-loading="loading" :data="projectList" @selection-change="handleSelectionChange" row-key="projectId" border stripe>
       <el-table-column type="selection" width="50" />
-      
+
       <el-table-column prop="projectId" label="项目ID" width="80" />
-      
+
       <el-table-column prop="projectName" label="项目名称" min-width="150">
         <template #default="{ row }">
           <div class="project-name">
-            <el-image
-              v-if="row.coverImage"
-              :src="row.coverImage"
-              class="project-avatar"
-              fit="cover"
-            />
+            <el-image v-if="row.coverImage" :src="row.coverImage" class="project-avatar" fit="cover" />
             <div v-else class="project-avatar-placeholder">
               {{ row.projectName?.charAt(0) }}
             </div>
@@ -120,15 +84,15 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="creatorName" label="创建者" width="100" />
-      
+
       <el-table-column prop="projectType" label="类型" width="100">
         <template #default="{ row }">
           <el-tag>{{ getProjectTypeText(row.projectType) }}</el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="getStatusType(row.status)">
@@ -136,7 +100,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="recruitmentStatus" label="招募状态" width="100">
         <template #default="{ row }">
           <el-tag :type="getRecruitmentStatusType(row.recruitmentStatus)">
@@ -144,7 +108,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="统计数据" width="160">
         <template #default="{ row }">
           <div class="stats-info">
@@ -155,19 +119,17 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="currentMembers" label="成员" width="80">
-        <template #default="{ row }">
-          {{ row.currentMembers || 0 }}/{{ row.teamSizeMax || 0 }}
-        </template>
+        <template #default="{ row }"> {{ row.currentMembers || 0 }}/{{ row.teamSizeMax || 0 }} </template>
       </el-table-column>
-      
+
       <el-table-column prop="createTime" label="创建时间" width="160">
         <template #default="{ row }">
           {{ formatDateTime(row.createTime) }}
         </template>
       </el-table-column>
-      
+
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button-group>
@@ -202,12 +164,7 @@
     </div>
 
     <!-- 批量操作对话框 -->
-    <el-dialog
-      v-model="batchDialogVisible"
-      title="批量操作"
-      width="500px"
-      append-to-body
-    >
+    <el-dialog v-model="batchDialogVisible" title="批量操作" width="500px" append-to-body>
       <el-form :model="batchForm" label-width="100px">
         <el-form-item label="操作类型">
           <el-select v-model="batchForm.operation" placeholder="请选择操作类型">
@@ -218,7 +175,7 @@
             <el-option label="设置学分认定" value="credit" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'status'" label="项目状态">
           <el-select v-model="batchForm.status" placeholder="请选择状态">
             <el-option label="进行中" value="active" />
@@ -227,7 +184,7 @@
             <el-option label="已取消" value="cancelled" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'recruitmentStatus'" label="招募状态">
           <el-select v-model="batchForm.recruitmentStatus" placeholder="请选择招募状态">
             <el-option label="开放招募" value="open" />
@@ -235,7 +192,7 @@
             <el-option label="关闭招募" value="closed" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="['featured', 'urgent', 'credit'].includes(batchForm.operation)" label="设置值">
           <el-radio-group v-model="batchForm.flagValue">
             <el-radio value="1">启用</el-radio>
@@ -243,7 +200,7 @@
           </el-radio-group>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="batchDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="confirmBatchOperation">确定</el-button>
@@ -342,16 +299,12 @@ const handleEdit = (row: ProjectInfo) => {
 
 // 删除项目
 const handleDelete = async (row: ProjectInfo) => {
-  await ElMessageBox.confirm(
-    `确定要删除项目 "${row.projectName}" 吗？`,
-    '确认删除',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  );
-  
+  await ElMessageBox.confirm(`确定要删除项目 "${row.projectName}" 吗？`, '确认删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
+
   try {
     await delProject([row.projectId!]);
     ElMessage.success('删除成功');
@@ -368,19 +321,15 @@ const handleBatchDelete = async () => {
     ElMessage.warning('请先选择要删除的项目');
     return;
   }
-  
-  await ElMessageBox.confirm(
-    `确定要删除选中的 ${selectedProjects.value.length} 个项目吗？`,
-    '确认批量删除',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  );
-  
+
+  await ElMessageBox.confirm(`确定要删除选中的 ${selectedProjects.value.length} 个项目吗？`, '确认批量删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
+
   try {
-    const projectIds = selectedProjects.value.map(item => item.projectId!);
+    const projectIds = selectedProjects.value.map((item) => item.projectId!);
     await delProject(projectIds);
     ElMessage.success('批量删除成功');
     getProjectList();
@@ -405,11 +354,11 @@ const confirmBatchOperation = async () => {
     ElMessage.warning('请选择操作类型');
     return;
   }
-  
+
   try {
-    const promises = selectedProjects.value.map(project => {
+    const promises = selectedProjects.value.map((project) => {
       const updateData: any = { projectId: project.projectId };
-      
+
       switch (batchForm.operation) {
         case 'status':
           updateData.status = batchForm.status;
@@ -427,10 +376,10 @@ const confirmBatchOperation = async () => {
           updateData.isCredit = batchForm.flagValue;
           break;
       }
-      
+
       return updateProject(updateData);
     });
-    
+
     await Promise.all(promises);
     ElMessage.success('批量操作成功');
     batchDialogVisible.value = false;
@@ -587,4 +536,4 @@ onMounted(() => {
     margin-top: 20px;
   }
 }
-</style> 
+</style>

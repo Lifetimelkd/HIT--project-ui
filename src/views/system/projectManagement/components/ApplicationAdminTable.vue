@@ -3,32 +3,25 @@
     <!-- 操作栏 -->
     <div class="table-header">
       <div class="search-area">
-        <el-input
-          v-model="queryParams.projectId"
-          placeholder="项目ID"
-          style="width: 120px;"
-          clearable
-          @clear="handleQuery"
-          @keyup.enter="handleQuery"
-        >
+        <el-input v-model="queryParams.projectId" placeholder="项目ID" style="width: 120px" clearable @clear="handleQuery" @keyup.enter="handleQuery">
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        
+
         <el-input
           v-model="queryParams.userId"
           placeholder="申请人ID"
-          style="width: 120px; margin-left: 10px;"
+          style="width: 120px; margin-left: 10px"
           clearable
           @clear="handleQuery"
           @keyup.enter="handleQuery"
         />
-        
+
         <el-select
           v-model="queryParams.applicationStatus"
           placeholder="申请状态"
-          style="width: 120px; margin-left: 10px;"
+          style="width: 120px; margin-left: 10px"
           clearable
           @change="handleQuery"
         >
@@ -38,61 +31,45 @@
           <el-option label="已拒绝" value="rejected" />
           <el-option label="已撤回" value="withdrawn" />
         </el-select>
-        
+
         <el-date-picker
           v-model="dateRange"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
-          style="width: 240px; margin-left: 10px;"
+          style="width: 240px; margin-left: 10px"
           @change="handleDateChange"
         />
-        
-        <el-button type="primary" @click="handleQuery" style="margin-left: 10px;">
+
+        <el-button type="primary" @click="handleQuery" style="margin-left: 10px">
           <el-icon><Search /></el-icon>
           搜索
         </el-button>
-        
-        <el-button @click="resetQuery" style="margin-left: 10px;">
+
+        <el-button @click="resetQuery" style="margin-left: 10px">
           <el-icon><Refresh /></el-icon>
           重置
         </el-button>
       </div>
-      
+
       <div class="action-area">
-        <el-button
-          type="success"
-          @click="handleExport"
-          :loading="exportLoading"
-        >
+        <el-button type="success" @click="handleExport" :loading="exportLoading">
           <el-icon><Download /></el-icon>
           导出
         </el-button>
-        
-        <el-button
-          type="primary"
-          @click="handleBatchApprove"
-          :disabled="selectedApplications.length === 0"
-        >
+
+        <el-button type="primary" @click="handleBatchApprove" :disabled="selectedApplications.length === 0">
           <el-icon><Check /></el-icon>
           批量通过
         </el-button>
-        
-        <el-button
-          type="danger"
-          @click="handleBatchReject"
-          :disabled="selectedApplications.length === 0"
-        >
+
+        <el-button type="danger" @click="handleBatchReject" :disabled="selectedApplications.length === 0">
           <el-icon><Close /></el-icon>
           批量拒绝
         </el-button>
-        
-        <el-button
-          type="warning"
-          @click="handleBatchOperation"
-          :disabled="selectedApplications.length === 0"
-        >
+
+        <el-button type="warning" @click="handleBatchOperation" :disabled="selectedApplications.length === 0">
           <el-icon><Operation /></el-icon>
           批量操作
         </el-button>
@@ -100,18 +77,11 @@
     </div>
 
     <!-- 数据表格 -->
-    <el-table
-      v-loading="loading"
-      :data="applicationList"
-      @selection-change="handleSelectionChange"
-      row-key="applicationId"
-      border
-      stripe
-    >
+    <el-table v-loading="loading" :data="applicationList" @selection-change="handleSelectionChange" row-key="applicationId" border stripe>
       <el-table-column type="selection" width="50" />
-      
+
       <el-table-column prop="applicationId" label="申请ID" width="80" />
-      
+
       <el-table-column label="项目信息" min-width="200">
         <template #default="{ row }">
           <div class="project-info">
@@ -121,7 +91,7 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="申请人信息" min-width="150">
         <template #default="{ row }">
           <div class="user-info">
@@ -136,7 +106,7 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="申请状态" width="100">
         <template #default="{ row }">
           <el-tag :type="getApplicationStatusType(row.applicationStatus)">
@@ -144,17 +114,13 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="priorityScore" label="优先级评分" width="100">
         <template #default="{ row }">
-          <el-progress
-            :percentage="row.priorityScore || 0"
-            :color="getScoreColor(row.priorityScore || 0)"
-            :stroke-width="8"
-          />
+          <el-progress :percentage="row.priorityScore || 0" :color="getScoreColor(row.priorityScore || 0)" :stroke-width="8" />
         </template>
       </el-table-column>
-      
+
       <el-table-column label="申请内容" min-width="200">
         <template #default="{ row }">
           <div class="application-content">
@@ -173,57 +139,41 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="availableTime" label="可投入时间" width="120">
         <template #default="{ row }">
           {{ row.availableTime || '未填写' }}
         </template>
       </el-table-column>
-      
+
       <el-table-column label="附件" width="100">
         <template #default="{ row }">
           <div class="attachments">
-            <el-button
-              v-if="row.resumeUrl"
-              size="small"
-              type="primary"
-              link
-              @click="handleViewAttachment(row.resumeUrl, '简历')"
-            >
-              简历
-            </el-button>
-            <el-button
-              v-if="row.portfolioUrl"
-              size="small"
-              type="success"
-              link
-              @click="handleViewAttachment(row.portfolioUrl, '作品集')"
-            >
+            <el-button v-if="row.resumeUrl" size="small" type="primary" link @click="handleViewAttachment(row.resumeUrl, '简历')"> 简历 </el-button>
+            <el-button v-if="row.portfolioUrl" size="small" type="success" link @click="handleViewAttachment(row.portfolioUrl, '作品集')">
               作品集
             </el-button>
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="createTime" label="申请时间" width="160">
         <template #default="{ row }">
           {{ formatDateTime(row.createTime) }}
         </template>
       </el-table-column>
-      
+
       <el-table-column label="审核信息" width="160">
         <template #default="{ row }">
           <div v-if="row.reviewTime" class="review-info">
             <div>审核人: {{ row.reviewerName || '未知' }}</div>
             <div>时间: {{ formatDateTime(row.reviewTime) }}</div>
-            <div v-if="row.reviewResult" class="review-result">
-              结果: {{ row.reviewResult }}
-            </div>
+            <div v-if="row.reviewResult" class="review-result">结果: {{ row.reviewResult }}</div>
           </div>
           <div v-else class="no-review">未审核</div>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button-group v-if="row.applicationStatus === 'pending' || row.applicationStatus === 'reviewing'">
@@ -268,12 +218,7 @@
     </div>
 
     <!-- 批量操作对话框 -->
-    <el-dialog
-      v-model="batchDialogVisible"
-      title="批量操作"
-      width="500px"
-      append-to-body
-    >
+    <el-dialog v-model="batchDialogVisible" title="批量操作" width="500px" append-to-body>
       <el-form :model="batchForm" label-width="100px">
         <el-form-item label="操作类型">
           <el-select v-model="batchForm.operation" placeholder="请选择操作类型">
@@ -282,23 +227,18 @@
             <el-option label="分配审核人" value="reviewer" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'review'" label="审核结果">
           <el-select v-model="batchForm.reviewStatus" placeholder="请选择审核结果">
             <el-option label="通过" value="approved" />
             <el-option label="拒绝" value="rejected" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'review'" label="审核意见">
-          <el-input
-            v-model="batchForm.reviewResult"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入审核意见"
-          />
+          <el-input v-model="batchForm.reviewResult" type="textarea" :rows="3" placeholder="请输入审核意见" />
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'status'" label="申请状态">
           <el-select v-model="batchForm.applicationStatus" placeholder="请选择状态">
             <el-option label="待审核" value="pending" />
@@ -308,7 +248,7 @@
             <el-option label="已撤回" value="withdrawn" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'reviewer'" label="审核人">
           <el-select v-model="batchForm.reviewerId" placeholder="请选择审核人">
             <el-option label="管理员" :value="1" />
@@ -316,7 +256,7 @@
           </el-select>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="batchDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="confirmBatchOperation">确定</el-button>
@@ -324,12 +264,7 @@
     </el-dialog>
 
     <!-- 申请详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="申请详情"
-      width="800px"
-      append-to-body
-    >
+    <el-dialog v-model="detailDialogVisible" title="申请详情" width="800px" append-to-body>
       <div v-if="currentApplication" class="application-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="申请ID">{{ currentApplication.applicationId }}</el-descriptions-item>
@@ -345,28 +280,28 @@
           <el-descriptions-item label="可投入时间">{{ currentApplication.availableTime || '未填写' }}</el-descriptions-item>
           <el-descriptions-item label="申请时间">{{ formatDateTime(currentApplication.createTime) }}</el-descriptions-item>
         </el-descriptions>
-        
-        <div class="detail-content" style="margin-top: 20px;">
+
+        <div class="detail-content" style="margin-top: 20px">
           <div v-if="currentApplication.applicationReason" class="content-section">
             <h4>申请理由</h4>
             <p>{{ currentApplication.applicationReason }}</p>
           </div>
-          
+
           <div v-if="currentApplication.selfIntroduction" class="content-section">
             <h4>自我介绍</h4>
             <p>{{ currentApplication.selfIntroduction }}</p>
           </div>
-          
+
           <div v-if="currentApplication.relevantExperience" class="content-section">
             <h4>相关经验</h4>
             <p>{{ currentApplication.relevantExperience }}</p>
           </div>
-          
+
           <div v-if="currentApplication.expectedContribution" class="content-section">
             <h4>预期贡献</h4>
             <p>{{ currentApplication.expectedContribution }}</p>
           </div>
-          
+
           <div v-if="currentApplication.reviewResult" class="content-section">
             <h4>审核结果</h4>
             <p>{{ currentApplication.reviewResult }}</p>
@@ -383,9 +318,9 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import request from '@/utils/request';
 
 // 修复: 导入真实的API接口
-import { 
-  getProjectApplicationsList as listApplications, 
-  approveProjectApplication, 
+import {
+  getProjectApplicationsList as listApplications,
+  approveProjectApplication,
   rejectProjectApplication,
   batchApproveApplications,
   batchRejectApplications
@@ -554,16 +489,12 @@ const handleViewAttachment = (url: string, type: string) => {
 
 // 修复: 单个审核 - 通过
 const handleApprove = async (row: ApplicationInfo) => {
-  await ElMessageBox.confirm(
-    `确定要通过 "${row.userName}" 的申请吗？`,
-    '确认通过',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'success'
-    }
-  );
-  
+  await ElMessageBox.confirm(`确定要通过 "${row.userName}" 的申请吗？`, '确认通过', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'success'
+  });
+
   try {
     // 调用后端API审核申请
     await request({
@@ -584,16 +515,12 @@ const handleApprove = async (row: ApplicationInfo) => {
 
 // 修复: 单个审核 - 拒绝
 const handleReject = async (row: ApplicationInfo) => {
-  const { value } = await ElMessageBox.prompt(
-    '请输入拒绝理由',
-    '拒绝申请',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPlaceholder: '请输入拒绝理由'
-    }
-  );
-  
+  const { value } = await ElMessageBox.prompt('请输入拒绝理由', '拒绝申请', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPlaceholder: '请输入拒绝理由'
+  });
+
   try {
     // 调用后端API审核申请
     await request({
@@ -618,20 +545,16 @@ const handleBatchApprove = async () => {
     ElMessage.warning('请先选择要通过的申请');
     return;
   }
-  
-  await ElMessageBox.confirm(
-    `确定要通过选中的 ${selectedApplications.value.length} 个申请吗？`,
-    '确认批量通过',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'success'
-    }
-  );
-  
+
+  await ElMessageBox.confirm(`确定要通过选中的 ${selectedApplications.value.length} 个申请吗？`, '确认批量通过', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'success'
+  });
+
   try {
     // 调用后端API批量审核申请
-    const applicationIds = selectedApplications.value.map(item => item.applicationId);
+    const applicationIds = selectedApplications.value.map((item) => item.applicationId);
     await request({
       url: '/hit/project/application/batch-review',
       method: 'put',
@@ -655,20 +578,16 @@ const handleBatchReject = async () => {
     ElMessage.warning('请先选择要拒绝的申请');
     return;
   }
-  
-  const { value } = await ElMessageBox.prompt(
-    '请输入批量拒绝理由',
-    '批量拒绝申请',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPlaceholder: '请输入拒绝理由'
-    }
-  );
-  
+
+  const { value } = await ElMessageBox.prompt('请输入批量拒绝理由', '批量拒绝申请', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPlaceholder: '请输入拒绝理由'
+  });
+
   try {
     // 调用后端API批量审核申请
-    const applicationIds = selectedApplications.value.map(item => item.applicationId);
+    const applicationIds = selectedApplications.value.map((item) => item.applicationId);
     await request({
       url: '/hit/project/application/batch-review',
       method: 'put',
@@ -701,10 +620,10 @@ const confirmBatchOperation = async () => {
     ElMessage.warning('请选择操作类型');
     return;
   }
-  
+
   try {
-    const applicationIds = selectedApplications.value.map(item => item.applicationId);
-    
+    const applicationIds = selectedApplications.value.map((item) => item.applicationId);
+
     if (batchForm.operation === 'review') {
       // 批量审核操作
       await request({
@@ -721,7 +640,7 @@ const confirmBatchOperation = async () => {
       ElMessage.info('批量状态修改功能需要后端支持');
       return;
     }
-    
+
     ElMessage.success('批量操作成功');
     batchDialogVisible.value = false;
     getApplicationList();
@@ -836,7 +755,8 @@ onMounted(() => {
       margin-bottom: 4px;
     }
 
-    .project-type, .project-creator {
+    .project-type,
+    .project-creator {
       font-size: 12px;
       color: #666;
       margin-bottom: 2px;
@@ -860,7 +780,8 @@ onMounted(() => {
         margin-bottom: 4px;
       }
 
-      .user-email, .user-phone {
+      .user-email,
+      .user-phone {
         font-size: 12px;
         color: #666;
         margin-bottom: 2px;
@@ -870,16 +791,18 @@ onMounted(() => {
 
   .application-content {
     font-size: 12px;
-    
-    .reason, .experience, .contribution {
+
+    .reason,
+    .experience,
+    .contribution {
       margin-bottom: 8px;
-      
+
       strong {
         display: block;
         margin-bottom: 2px;
         color: #333;
       }
-      
+
       .text-ellipsis {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -899,7 +822,7 @@ onMounted(() => {
   .review-info {
     font-size: 12px;
     color: #666;
-    
+
     .review-result {
       margin-top: 4px;
       font-weight: 500;
@@ -921,13 +844,13 @@ onMounted(() => {
   .application-detail {
     .content-section {
       margin-bottom: 20px;
-      
+
       h4 {
         margin: 0 0 10px 0;
         color: #333;
         font-size: 16px;
       }
-      
+
       p {
         margin: 0;
         line-height: 1.6;
@@ -936,4 +859,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>

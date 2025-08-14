@@ -15,27 +15,16 @@
     <!-- 编辑表单 -->
     <div class="form-container" v-loading="pageLoading">
       <el-card class="form-card" v-if="!pageLoading">
-        <el-form
-          ref="formRef"
-          :model="form"
-          :rules="rules"
-          label-width="120px"
-          size="large"
-        >
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" size="large">
           <!-- 基本信息 -->
           <div class="form-section">
             <h3 class="section-title">
               <el-icon><Document /></el-icon>
               基本信息
             </h3>
-            
+
             <el-form-item label="项目名称" prop="projectName">
-              <el-input
-                v-model="form.projectName"
-                placeholder="请输入项目名称"
-                maxlength="50"
-                show-word-limit
-              />
+              <el-input v-model="form.projectName" placeholder="请输入项目名称" maxlength="50" show-word-limit />
             </el-form-item>
 
             <el-form-item label="项目描述" prop="projectDescription">
@@ -50,12 +39,7 @@
             </el-form-item>
 
             <el-form-item label="详细介绍" prop="projectBackground">
-              <el-input
-                v-model="form.projectBackground"
-                type="textarea"
-                :rows="8"
-                placeholder="请输入项目的详细介绍..."
-              />
+              <el-input v-model="form.projectBackground" type="textarea" :rows="8" placeholder="请输入项目的详细介绍..." />
             </el-form-item>
 
             <el-form-item label="项目封面">
@@ -113,25 +97,12 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="团队规模" prop="teamSizeMax">
-                  <el-input-number
-                    v-model="form.teamSizeMax"
-                    :min="2"
-                    :max="20"
-                    placeholder="最大成员数"
-                    style="width: 100%"
-                  />
+                  <el-input-number v-model="form.teamSizeMax" :min="2" :max="20" placeholder="最大成员数" style="width: 100%" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="当前成员">
-                  <el-input-number
-                    v-model="currentMembers"
-                    :min="1"
-                    :max="form.teamSizeMax"
-                    placeholder="当前成员数"
-                    style="width: 100%"
-                    disabled
-                  />
+                  <el-input-number v-model="currentMembers" :min="1" :max="form.teamSizeMax" placeholder="当前成员数" style="width: 100%" disabled />
                   <div class="form-tip">当前成员数由系统自动计算</div>
                 </el-form-item>
               </el-col>
@@ -148,22 +119,12 @@
             <el-row :gutter="20">
               <el-col :span="8">
                 <el-form-item label="开始时间" prop="startDate">
-                  <el-date-picker
-                    v-model="form.startDate"
-                    type="date"
-                    placeholder="选择开始时间"
-                    style="width: 100%"
-                  />
+                  <el-date-picker v-model="form.startDate" type="date" placeholder="选择开始时间" style="width: 100%" />
                 </el-form-item>
               </el-col>
               <el-col :span="8">
                 <el-form-item label="结束时间" prop="endDate">
-                  <el-date-picker
-                    v-model="form.endDate"
-                    type="date"
-                    placeholder="选择结束时间"
-                    style="width: 100%"
-                  />
+                  <el-date-picker v-model="form.endDate" type="date" placeholder="选择结束时间" style="width: 100%" />
                 </el-form-item>
               </el-col>
               <el-col :span="8">
@@ -206,9 +167,7 @@
           <!-- 提交按钮 -->
           <div class="form-actions">
             <el-button size="large" @click="handleCancel">取消</el-button>
-            <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
-              保存修改
-            </el-button>
+            <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting"> 保存修改 </el-button>
           </div>
         </el-form>
       </el-card>
@@ -232,8 +191,8 @@ const pageLoading = ref(true);
 const projectId = Number(route.params.id);
 
 // 添加图片上传相关配置
-const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload')
-const uploadHeaders = ref(globalHeaders())
+const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload');
+const uploadHeaders = ref(globalHeaders());
 
 // 表单数据
 const form = reactive<ProjectForm>({
@@ -271,30 +230,14 @@ const rules = {
     { required: true, message: '请输入项目描述', trigger: 'blur' },
     { min: 10, max: 200, message: '项目描述长度在 10 到 200 个字符', trigger: 'blur' }
   ],
-  projectType: [
-    { required: true, message: '请选择项目类型', trigger: 'change' }
-  ],
-  difficultyLevel: [
-    { required: true, message: '请选择难度等级', trigger: 'change' }
-  ],
-  teamSizeMax: [
-    { required: true, message: '请输入团队规模', trigger: 'blur' }
-  ],
-  startDate: [
-    { required: true, message: '请选择开始时间', trigger: 'change' }
-  ],
-  endDate: [
-    { required: true, message: '请选择结束时间', trigger: 'change' }
-  ],
-  recruitmentStatus: [
-    { required: true, message: '请选择招募状态', trigger: 'change' }
-  ],
-  status: [
-    { required: true, message: '请选择项目状态', trigger: 'change' }
-  ],
-  visibility: [
-    { required: true, message: '请选择可见性', trigger: 'change' }
-  ]
+  projectType: [{ required: true, message: '请选择项目类型', trigger: 'change' }],
+  difficultyLevel: [{ required: true, message: '请选择难度等级', trigger: 'change' }],
+  teamSizeMax: [{ required: true, message: '请输入团队规模', trigger: 'blur' }],
+  startDate: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+  endDate: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  recruitmentStatus: [{ required: true, message: '请选择招募状态', trigger: 'change' }],
+  status: [{ required: true, message: '请选择项目状态', trigger: 'change' }],
+  visibility: [{ required: true, message: '请选择可见性', trigger: 'change' }]
 };
 
 // 获取项目详情
@@ -303,7 +246,7 @@ const getProjectDetail = async () => {
   try {
     const response = await getProject(projectId);
     const project = response.data;
-    
+
     // 填充表单数据
     Object.assign(form, {
       projectId: project.projectId,
@@ -323,17 +266,16 @@ const getProjectDetail = async () => {
       approvalMode: project.approvalMode || 'auto',
       status: project.status || 'active'
     });
-    
+
     // 设置当前成员数
     currentMembers.value = project.currentMembers || 1;
-    
+
     // 设置特殊标记
     const flags = [];
     if (project.isFeatured === '1') flags.push('featured');
     if (project.isUrgent === '1') flags.push('urgent');
     if (project.isCredit === '1') flags.push('credit');
     specialFlags.value = flags;
-    
   } catch (error) {
     console.error('获取项目详情失败:', error);
     ElMessage.error('获取项目详情失败');
@@ -373,14 +315,14 @@ const beforeCoverUpload = (file: File) => {
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate();
-    
+
     submitting.value = true;
-    
+
     // 处理特殊标记
     form.isFeatured = specialFlags.value.includes('featured') ? '1' : '0';
     form.isUrgent = specialFlags.value.includes('urgent') ? '1' : '0';
     form.isCredit = specialFlags.value.includes('credit') ? '1' : '0';
-    
+
     // 处理日期格式
     if (form.startDate) {
       form.startDate = new Date(form.startDate).toISOString().split('T')[0];
@@ -388,9 +330,9 @@ const handleSubmit = async () => {
     if (form.endDate) {
       form.endDate = new Date(form.endDate).toISOString().split('T')[0];
     }
-    
+
     await updateProject(form);
-    
+
     ElMessage.success('项目修改成功！');
     router.push('/hit/project/my');
   } catch (error) {
@@ -457,7 +399,7 @@ onMounted(() => {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.3);
     }
@@ -491,7 +433,7 @@ onMounted(() => {
 
 .form-section {
   margin-bottom: 40px;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -585,4 +527,4 @@ onMounted(() => {
 :deep(.el-date-editor) {
   width: 100%;
 }
-</style> 
+</style>

@@ -48,12 +48,7 @@
       <el-card class="filter-card">
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-input
-              v-model="queryParams.applicantName"
-              placeholder="搜索申请人姓名"
-              clearable
-              @keyup.enter="handleQuery"
-            >
+            <el-input v-model="queryParams.applicantName" placeholder="搜索申请人姓名" clearable @keyup.enter="handleQuery">
               <template #prefix>
                 <el-icon><Search /></el-icon>
               </template>
@@ -107,12 +102,7 @@
           </div>
         </template>
 
-        <el-table
-          v-loading="loading"
-          :data="applicationsList"
-          @selection-change="handleSelectionChange"
-          style="width: 100%"
-        >
+        <el-table v-loading="loading" :data="applicationsList" @selection-change="handleSelectionChange" style="width: 100%">
           <el-table-column type="selection" width="55" />
           <el-table-column label="申请人" width="200">
             <template #default="{ row }">
@@ -170,37 +160,10 @@
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
-                <el-button 
-                  type="primary" 
-                  size="small" 
-                  @click="handleViewProfile(row.applicantId)"
-                >
-                  查看档案
-                </el-button>
-                <el-button 
-                  v-if="row.status === 'pending'" 
-                  type="success" 
-                  size="small" 
-                  @click="handleApprove(row)"
-                >
-                  通过
-                </el-button>
-                <el-button 
-                  v-if="row.status === 'pending'" 
-                  type="danger" 
-                  size="small" 
-                  @click="handleReject(row)"
-                >
-                  拒绝
-                </el-button>
-                <el-button 
-                  v-if="row.status === 'approved'" 
-                  type="warning" 
-                  size="small" 
-                  @click="handleRevoke(row)"
-                >
-                  撤销
-                </el-button>
+                <el-button type="primary" size="small" @click="handleViewProfile(row.applicantId)"> 查看档案 </el-button>
+                <el-button v-if="row.status === 'pending'" type="success" size="small" @click="handleApprove(row)"> 通过 </el-button>
+                <el-button v-if="row.status === 'pending'" type="danger" size="small" @click="handleReject(row)"> 拒绝 </el-button>
+                <el-button v-if="row.status === 'approved'" type="warning" size="small" @click="handleRevoke(row)"> 撤销 </el-button>
               </div>
             </template>
           </el-table-column>
@@ -222,12 +185,7 @@
     </div>
 
     <!-- 申请详情对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      title="申请详情"
-      width="60%"
-      :close-on-click-modal="false"
-    >
+    <el-dialog v-model="dialogVisible" title="申请详情" width="60%" :close-on-click-modal="false">
       <div class="application-detail" v-if="currentApplication">
         <div class="detail-section">
           <h4>申请人信息</h4>
@@ -240,7 +198,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="detail-section">
           <h4>申请信息</h4>
           <el-form label-width="100px">
@@ -255,11 +213,7 @@
             </el-form-item>
             <el-form-item label="技能标签：">
               <div class="skills-display">
-                <el-tag
-                  v-for="skill in (currentApplication.skills || '').split(',')"
-                  :key="skill"
-                  style="margin-right: 8px"
-                >
+                <el-tag v-for="skill in (currentApplication.skills || '').split(',')" :key="skill" style="margin-right: 8px">
                   {{ skill }}
                 </el-tag>
               </div>
@@ -267,24 +221,12 @@
           </el-form>
         </div>
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible = false">关闭</el-button>
-          <el-button 
-            v-if="currentApplication?.status === 'pending'" 
-            type="success" 
-            @click="handleApprove(currentApplication)"
-          >
-            通过申请
-          </el-button>
-          <el-button 
-            v-if="currentApplication?.status === 'pending'" 
-            type="danger" 
-            @click="handleReject(currentApplication)"
-          >
-            拒绝申请
-          </el-button>
+          <el-button v-if="currentApplication?.status === 'pending'" type="success" @click="handleApprove(currentApplication)"> 通过申请 </el-button>
+          <el-button v-if="currentApplication?.status === 'pending'" type="danger" @click="handleReject(currentApplication)"> 拒绝申请 </el-button>
         </div>
       </template>
     </el-dialog>
@@ -297,8 +239,8 @@ import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 改为导入完整的API接口定义
-import { 
-  getProject, 
+import {
+  getProject,
   ProjectInfo,
   getProjectApplicationsList,
   approveProjectApplication,
@@ -358,7 +300,7 @@ const getApplicationsList = async () => {
       pageNum: queryParams.pageNum,
       pageSize: queryParams.pageSize
     });
-    
+
     applicationsList.value = response.data.rows || [];
     total.value = response.data.total || 0;
   } catch (error) {
@@ -417,10 +359,10 @@ const handleApprove = async (application: any) => {
       cancelButtonText: '取消',
       type: 'success'
     });
-    
+
     // 使用真实API调用
     await approveProjectApplication(application.id);
-    
+
     ElMessage.success('申请已通过');
     await getApplicationsList(); // 刷新申请列表
   } catch (error) {
@@ -440,10 +382,10 @@ const handleReject = async (application: any) => {
       inputPattern: /.+/,
       inputErrorMessage: '请输入拒绝理由'
     });
-    
+
     // 使用真实API调用
     await rejectProjectApplication(application.id, reviewComment);
-    
+
     ElMessage.success('申请已拒绝');
     await getApplicationsList(); // 刷新申请列表
   } catch (error) {
@@ -462,10 +404,10 @@ const handleRevoke = async (application: any) => {
       cancelButtonText: '取消',
       type: 'warning'
     });
-    
+
     // 使用真实API调用
     await revokeProjectApplication(application.id);
-    
+
     ElMessage.success('申请状态已撤销');
     await getApplicationsList(); // 刷新申请列表
   } catch (error) {
@@ -489,10 +431,10 @@ const handleBatchApprove = async () => {
       cancelButtonText: '取消',
       type: 'success'
     });
-    
+
     // 使用真实API调用
-    await batchApproveApplications(selectedApplications.value.map(app => app.id));
-    
+    await batchApproveApplications(selectedApplications.value.map((app) => app.id));
+
     ElMessage.success('批量操作完成');
     selectedApplications.value = [];
     await getApplicationsList(); // 刷新申请列表
@@ -518,10 +460,13 @@ const handleBatchReject = async () => {
       inputPattern: /.+/,
       inputErrorMessage: '请输入拒绝理由'
     });
-    
+
     // 使用真实API调用
-    await batchRejectApplications(selectedApplications.value.map(app => app.id), reviewComment);
-    
+    await batchRejectApplications(
+      selectedApplications.value.map((app) => app.id),
+      reviewComment
+    );
+
     ElMessage.success('批量操作完成');
     selectedApplications.value = [];
     await getApplicationsList(); // 刷新申请列表
@@ -621,7 +566,7 @@ onMounted(() => {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.3);
     }
@@ -831,4 +776,4 @@ onMounted(() => {
 :deep(.el-card__body) {
   padding: 20px;
 }
-</style> 
+</style>

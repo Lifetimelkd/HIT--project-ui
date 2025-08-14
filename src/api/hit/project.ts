@@ -3,7 +3,7 @@ import { AxiosPromise } from 'axios';
 
 // 项目信息接口
 export interface ProjectInfo {
-  projectId?: number;
+  projectId?: string; // 改为string类型以避免大整数精度丢失
   projectName?: string;
   projectDescription?: string;
   projectBackground?: string;
@@ -61,7 +61,7 @@ export interface ProjectQuery {
 
 // 项目表单对象
 export interface ProjectForm {
-  projectId?: number;
+  projectId?: string;
   projectName: string;
   projectDescription: string;
   projectBackground?: string;
@@ -95,7 +95,7 @@ export function listProject(query: ProjectQuery): AxiosPromise<ProjectInfo[]> {
 }
 
 // 查询项目详细信息
-export function getProject(projectId: number): AxiosPromise<ProjectInfo> {
+export function getProject(projectId: string): AxiosPromise<ProjectInfo> {
   return request({
     url: `/hit/project/${projectId}`,
     method: 'get'
@@ -103,7 +103,7 @@ export function getProject(projectId: number): AxiosPromise<ProjectInfo> {
 }
 
 // 新增项目
-export function addProject(data: ProjectForm): AxiosPromise<void> {
+export function addProject(data: ProjectForm): AxiosPromise<string> {
   return request({
     url: '/hit/project',
     method: 'post',
@@ -121,7 +121,7 @@ export function updateProject(data: ProjectForm): AxiosPromise<void> {
 }
 
 // 删除项目
-export function delProject(projectIds: number[]): AxiosPromise<void> {
+export function delProject(projectIds: string[]): AxiosPromise<void> {
   return request({
     url: `/hit/project/${projectIds}`,
     method: 'delete'
@@ -168,7 +168,7 @@ export function listFeaturedProject(query: ProjectQuery): AxiosPromise<ProjectIn
 }
 
 // 查询项目详细信息（公开）
-export function getPublicProject(projectId: number): AxiosPromise<ProjectInfo> {
+export function getPublicProject(projectId: string): AxiosPromise<ProjectInfo> {
   return request({
     url: `/hit/project/public/${projectId}`,
     method: 'get'
@@ -176,7 +176,7 @@ export function getPublicProject(projectId: number): AxiosPromise<ProjectInfo> {
 }
 
 // 点赞项目
-export function likeProject(projectId: number): AxiosPromise<void> {
+export function likeProject(projectId: string): AxiosPromise<void> {
   return request({
     url: `/hit/project/${projectId}/like`,
     method: 'post'
@@ -184,7 +184,7 @@ export function likeProject(projectId: number): AxiosPromise<void> {
 }
 
 // 取消点赞项目
-export function unlikeProject(projectId: number): AxiosPromise<void> {
+export function unlikeProject(projectId: string): AxiosPromise<void> {
   return request({
     url: `/hit/project/${projectId}/unlike`,
     method: 'post'
@@ -192,7 +192,7 @@ export function unlikeProject(projectId: number): AxiosPromise<void> {
 }
 
 // 收藏项目
-export function collectProject(projectId: number): AxiosPromise<void> {
+export function collectProject(projectId: string): AxiosPromise<void> {
   return request({
     url: `/hit/project/${projectId}/collect`,
     method: 'post'
@@ -200,7 +200,7 @@ export function collectProject(projectId: number): AxiosPromise<void> {
 }
 
 // 取消收藏项目
-export function uncollectProject(projectId: number): AxiosPromise<void> {
+export function uncollectProject(projectId: string): AxiosPromise<void> {
   return request({
     url: `/hit/project/${projectId}/uncollect`,
     method: 'post'
@@ -248,7 +248,7 @@ export function listLikedProject(query: ProjectQuery): AxiosPromise<ProjectInfo[
 // ==================== 统计接口 ====================
 
 // 查询项目统计信息
-export function getProjectStats(projectId: number): AxiosPromise<any> {
+export function getProjectStats(projectId: string): AxiosPromise<any> {
   return request({
     url: `/hit/project/public/stats/${projectId}`,
     method: 'get'
@@ -256,7 +256,7 @@ export function getProjectStats(projectId: number): AxiosPromise<any> {
 }
 
 // 检查用户是否点赞了项目
-export function checkUserLiked(projectId: number, userId?: number): AxiosPromise<boolean> {
+export function checkUserLiked(projectId: string, userId?: number): AxiosPromise<boolean> {
   return request({
     url: `/hit/project/check/liked/${projectId}`,
     method: 'get',
@@ -265,7 +265,7 @@ export function checkUserLiked(projectId: number, userId?: number): AxiosPromise
 }
 
 // 检查用户是否收藏了项目
-export function checkUserCollected(projectId: number, userId?: number): AxiosPromise<boolean> {
+export function checkUserCollected(projectId: string, userId?: number): AxiosPromise<boolean> {
   return request({
     url: `/hit/project/check/collected/${projectId}`,
     method: 'get',
@@ -293,8 +293,16 @@ export interface MemberInfo {
   totalTasks?: number;
 }
 
+// 后端分页响应结构
+export interface PageResponse<T> {
+  total: number;
+  rows: T[];
+  code: number;
+  msg: string;
+}
+
 // 查询项目成员列表 - 修改为后端实际路径
-export function getProjectMemberList(projectId: number, pageNum?: number, pageSize?: number): AxiosPromise<MemberInfo[]> {
+export function getProjectMemberList(projectId: string, pageNum?: number, pageSize?: number): AxiosPromise<PageResponse<MemberInfo>> {
   return request({
     url: `/hit/project/member/project/${projectId}`,
     method: 'get',
@@ -307,7 +315,7 @@ export function getProjectMemberList(projectId: number, pageNum?: number, pageSi
 
 // 邀请成员加入项目接口
 export interface InviteMemberForm {
-  projectId: number;
+  projectId: string; // 改为string类型
   userId: number;
   memberRole: string;
 }
@@ -317,7 +325,11 @@ export function inviteMemberToProject(data: InviteMemberForm): AxiosPromise<any>
   return request({
     url: '/hit/project/member/add-member',
     method: 'post',
-    data
+    params: {
+      projectId: data.projectId, // 直接传递字符串，避免精度丢失
+      userId: data.userId.toString(), // 确保是字符串类型
+      memberRole: data.memberRole
+    }
   });
 }
 
@@ -331,7 +343,9 @@ export function changeProjectMemberRole(memberId: number, data: ChangeRoleForm):
   return request({
     url: `/hit/project/member/role/${memberId}`,
     method: 'put',
-    data
+    params: {
+      memberRole: data.memberRole
+    }
   });
 }
 
@@ -344,7 +358,7 @@ export function removeProjectMember(memberId: number): AxiosPromise<any> {
 }
 
 // 获取项目成员数量 - 新增接口
-export function getProjectMemberCount(projectId: number): AxiosPromise<number> {
+export function getProjectMemberCount(projectId: string): AxiosPromise<number> {
   return request({
     url: `/hit/project/member/count/${projectId}`,
     method: 'get'
@@ -371,7 +385,7 @@ export interface ApplicationInfo {
 
 // 申请查询参数
 export interface ApplicationQuery {
-  projectId: number;
+  projectId: string; // 改为string类型
   status?: string;
   pageNum?: number;
   pageSize?: number;
@@ -391,7 +405,7 @@ export function getProjectApplicationsList(params: ApplicationQuery): AxiosPromi
 }
 
 // 获取待审核申请数量 - 修改为后端实际路径
-export function getPendingApplicationsCount(projectId: number): AxiosPromise<number> {
+export function getPendingApplicationsCount(projectId: string): AxiosPromise<number> {
   return request({
     url: `/hit/project/application/pending-count/${projectId}`,
     method: 'get'
@@ -488,9 +502,9 @@ export function withdrawApplication(applicationId: number): AxiosPromise<void> {
 }
 
 // 检查用户是否已申请项目
-export function checkUserApplicationExists(projectId: number): AxiosPromise<boolean> {
+export function checkUserApplicationExists(projectId: string): AxiosPromise<boolean> {
   return request({
-    url: `/hit/project/application/check/${projectId}`,
+    url: `/hit/project/application/check-exists/${projectId}`,
     method: 'get'
   });
 }
@@ -580,4 +594,174 @@ export function getProjectTypeDistribution(): AxiosPromise<TypeDistributionInfo[
     url: '/hit/project/admin/statistics/types',
     method: 'get'
   });
-} 
+}
+
+// ==================== 项目角色管理接口 ====================
+
+// 项目角色信息
+export interface ProjectRoleInfo {
+  roleId: number;
+  projectId: string; // 改为string类型
+  roleName: string;
+  roleDescription?: string;
+  requiredSkills?: string;
+  responsibilities?: string;
+  requiredCount: number;
+  currentCount: number;
+  experienceRequired?: string;
+  timeCommitment?: string;
+  isLeader?: string;
+  priority?: number;
+  status?: string;
+  createTime?: string;
+  updateTime?: string;
+}
+
+// 项目角色查询对象
+export interface ProjectRoleQuery {
+  projectId?: number;
+  roleName?: string;
+  status?: string;
+  isLeader?: string;
+}
+
+// 项目角色创建/更新表单
+export interface ProjectRoleForm {
+  roleId?: number;
+  projectId: string; // 改为string类型
+  roleName: string;
+  roleDescription?: string;
+  requiredSkills?: string;
+  responsibilities?: string;
+  requiredCount: number;
+  experienceRequired?: string;
+  timeCommitment?: string;
+  isLeader?: string;
+  priority?: number;
+  status?: string;
+}
+
+// 查询项目的所有角色
+export function getProjectRoles(projectId: string): AxiosPromise<ProjectRoleInfo[]> {
+  return request({
+    url: `/hit/project/role/project/${projectId}`,
+    method: 'get'
+  });
+}
+
+// 查询项目的可申请角色（招募中且未满员）
+export function getAvailableProjectRoles(projectId: string): AxiosPromise<ProjectRoleInfo[]> {
+  return request({
+    url: `/hit/project/role/project/${projectId}/available`,
+    method: 'get'
+  });
+}
+
+// 查询项目的领导角色
+export function getLeaderProjectRoles(projectId: string): AxiosPromise<ProjectRoleInfo[]> {
+  return request({
+    url: `/hit/project/role/project/${projectId}/leaders`,
+    method: 'get'
+  });
+}
+
+// 根据角色名称查询项目角色
+export function getProjectRoleByName(projectId: string, roleName: string): AxiosPromise<ProjectRoleInfo> {
+  return request({
+    url: `/hit/project/role/project/${projectId}/name/${roleName}`,
+    method: 'get'
+  });
+}
+
+// 检查项目角色名称是否存在
+export function checkProjectRoleNameExists(projectId: string, roleName: string, excludeRoleId?: number): AxiosPromise<boolean> {
+  return request({
+    url: '/hit/project/role/check-name',
+    method: 'get',
+    params: { projectId, roleName, excludeRoleId }
+  });
+}
+
+// 创建项目角色
+export function createProjectRole(data: ProjectRoleForm): AxiosPromise<any> {
+  return request({
+    url: '/hit/project/role',
+    method: 'post',
+    data
+  });
+}
+
+// 更新项目角色
+export function updateProjectRole(data: ProjectRoleForm): AxiosPromise<any> {
+  return request({
+    url: '/hit/project/role',
+    method: 'put',
+    data
+  });
+}
+
+// 删除项目角色
+export function deleteProjectRole(roleId: number): AxiosPromise<any> {
+  return request({
+    url: `/hit/project/role/${roleId}`,
+    method: 'delete'
+  });
+}
+
+// 创建项目默认角色
+export function createDefaultProjectRoles(projectId: string, projectType?: string, projectCategory?: string): AxiosPromise<any> {
+  return request({
+    url: `/hit/project/role/project/${projectId}/default`,
+    method: 'post',
+    params: { projectType, projectCategory }
+  });
+}
+
+// 批量创建招募岗位（项目角色）
+export interface RecruitmentPosition {
+  positionName: string;
+  requiredCount: number;
+  description: string;
+  requirements: string;
+}
+
+export function createRecruitmentPositions(projectId: string, positions: RecruitmentPosition[]): Promise<any[]> {
+  const roles = positions.map((position) => ({
+    projectId: projectId,
+    roleName: position.positionName,
+    roleDescription: position.description,
+    requiredSkills: position.requirements,
+    requiredCount: position.requiredCount,
+    isLeader: '0',
+    status: '0' // 招募中
+  }));
+
+  return Promise.all(roles.map((role) => createProjectRole(role)));
+}
+
+// 更新项目角色的当前人数统计
+export function updateProjectRoleCount(projectId: string): AxiosPromise<any> {
+  return request({
+    url: `/hit/project/role/project/${projectId}/update-count`,
+    method: 'put'
+  });
+}
+
+// 统计项目角色数量
+export function countProjectRoles(projectId: string, status?: string): AxiosPromise<number> {
+  return request({
+    url: `/hit/project/role/project/${projectId}/count`,
+    method: 'get',
+    params: { status }
+  });
+}
+
+// 批量设置角色状态
+export function batchUpdateRoleStatus(roleIds: number[], status: string): AxiosPromise<any> {
+  return request({
+    url: '/hit/project/role/batch-status',
+    method: 'put',
+    data: roleIds,
+    params: { status }
+  });
+}

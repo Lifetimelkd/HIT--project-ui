@@ -147,7 +147,7 @@ const loadStatistics = async () => {
 
     if (response && response.data) {
       const data = response.data;
-      
+
       // 更新项目统计
       projectStats.total = data.totalProjects || 0;
       projectStats.active = data.activeProjects || 0;
@@ -168,7 +168,7 @@ const loadStatistics = async () => {
   } catch (error) {
     console.error('加载统计数据失败:', error);
     ElMessage.error('加载统计数据失败');
-    
+
     // 如果API调用失败，显示默认数据避免界面报错
     projectStats.total = 0;
     projectStats.active = 0;
@@ -282,7 +282,7 @@ onMounted(() => {
 
   .main-content {
     border-radius: 12px;
-    
+
     :deep(.el-card__body) {
       padding: 0;
     }
@@ -307,4 +307,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>

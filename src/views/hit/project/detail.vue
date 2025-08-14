@@ -21,11 +21,11 @@
             </div>
           </div>
         </div>
-        
+
         <div class="hero-info">
           <h1 class="project-title">{{ project.projectName }}</h1>
           <p class="project-subtitle">{{ project.projectDescription }}</p>
-          
+
           <div class="project-meta">
             <div class="meta-group">
               <div class="meta-item">
@@ -41,7 +41,7 @@
                 <span>项目类型：{{ getProjectTypeText(project.projectType!) }}</span>
               </div>
             </div>
-            
+
             <div class="project-stats">
               <div class="stat-card">
                 <div class="stat-number">{{ project.viewCount }}</div>
@@ -61,30 +61,17 @@
               </div>
             </div>
           </div>
-          
+
           <div class="action-buttons">
-            <el-button
-              type="primary"
-              size="large"
-              @click="handleApply"
-              :disabled="project.recruitmentStatus !== 'open'"
-            >
+            <el-button type="primary" size="large" @click="handleApply" :disabled="project.recruitmentStatus !== 'open'">
               <el-icon><Plus /></el-icon>
               申请加入
             </el-button>
-            <el-button
-              size="large"
-              :type="project.userLiked ? 'primary' : 'default'"
-              @click="handleLike"
-            >
+            <el-button size="large" :type="project.userLiked ? 'primary' : 'default'" @click="handleLike">
               <el-icon><Star /></el-icon>
               {{ project.userLiked ? '已点赞' : '点赞' }}
             </el-button>
-            <el-button
-              size="large"
-              :type="project.userCollected ? 'warning' : 'default'"
-              @click="handleCollect"
-            >
+            <el-button size="large" :type="project.userCollected ? 'warning' : 'default'" @click="handleCollect">
               <el-icon><Collection /></el-icon>
               {{ project.userCollected ? '已收藏' : '收藏' }}
             </el-button>
@@ -99,7 +86,9 @@
               <!-- 项目详情 -->
               <el-card class="info-card">
                 <template #header>
-                  <h3><el-icon><Document /></el-icon> 项目详情</h3>
+                  <h3>
+                    <el-icon><Document /></el-icon> 项目详情
+                  </h3>
                 </template>
                 <div class="project-detail-content">
                   <div class="detail-section" v-if="project.projectBackground">
@@ -121,24 +110,27 @@
               <el-card class="info-card">
                 <template #header>
                   <div class="card-header">
-                    <h3><el-icon><UserFilled /></el-icon> 项目成员</h3>
+                    <h3>
+                      <el-icon><UserFilled /></el-icon> 项目成员
+                    </h3>
                     <el-button size="small" @click="handleViewAllMembers">查看全部</el-button>
                   </div>
                 </template>
                 <div class="members-content" v-loading="membersLoading">
-                  <div class="member-list">
+                  <div v-if="memberList.length === 0 && !membersLoading" class="empty-members">
+                    <el-empty description="暂无成员" :image-size="60" />
+                  </div>
+                  <div v-else class="member-list">
                     <div class="member-item" v-for="member in memberList" :key="member.memberId">
-                      <el-avatar :src="member.avatarUrl" :size="50">{{ member.userName?.charAt(0) }}</el-avatar>
+                      <el-avatar :src="member.avatarUrl" :size="50">
+                        {{ member.userName?.charAt(0) || '?' }}
+                      </el-avatar>
                       <div class="member-info">
                         <div class="member-name">
                           {{ member.userName }}
                           <el-tag v-if="member.isLeader === '1'" type="warning" size="small">组长</el-tag>
                         </div>
                         <div class="member-role">{{ member.memberRole }}</div>
-                        <div class="member-stats">
-                          <span>贡献度: {{ member.contributionScore || 0 }}</span>
-                          <span>任务: {{ member.completedTasks || 0 }}/{{ member.totalTasks || 0 }}</span>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -152,7 +144,9 @@
               <!-- 项目信息 -->
               <el-card class="info-card">
                 <template #header>
-                  <h3><el-icon><InfoFilled /></el-icon> 项目信息</h3>
+                  <h3>
+                    <el-icon><InfoFilled /></el-icon> 项目信息
+                  </h3>
                 </template>
                 <div class="project-info-list">
                   <div class="info-item">
@@ -189,7 +183,9 @@
               <!-- 申请统计 -->
               <el-card class="info-card">
                 <template #header>
-                  <h3><el-icon><DataAnalysis /></el-icon> 申请统计</h3>
+                  <h3>
+                    <el-icon><DataAnalysis /></el-icon> 申请统计
+                  </h3>
                 </template>
                 <div class="application-stats">
                   <div class="stat-item">
@@ -225,6 +221,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import {
+  getProject,
   getPublicProject,
   likeProject,
   unlikeProject,
@@ -263,13 +260,23 @@ const pendingApplications = ref(0);
 const getProjectDetail = async () => {
   loading.value = true;
   try {
-    const projectId = Number(route.params.id);
-    const response = await getPublicProject(projectId);
-    project.value = response.data;
-    
+    const projectId = route.params.id as string; // 直接使用string类型，不转换为Number
+    let response;
+
+    try {
+      // 先尝试有权限的接口（用于自己创建的项目或有权限的项目）
+      response = await getProject(projectId);
+      project.value = response.data;
+    } catch (error) {
+      // 如果有权限接口失败，尝试公开接口
+      console.warn('尝试有权限接口失败，切换到公开接口:', error);
+      response = await getPublicProject(projectId);
+      project.value = response.data;
+    }
+
     // 检查用户交互状态
     await checkUserInteractions();
-    
+
     // 获取项目成员
     await getProjectMembers();
   } catch (error) {
@@ -283,13 +290,10 @@ const getProjectDetail = async () => {
 // 检查用户交互状态
 const checkUserInteractions = async () => {
   if (!project.value) return;
-  
+
   // 启用用户交互状态检查
   try {
-    const [likedRes, collectedRes] = await Promise.all([
-      checkUserLiked(project.value.projectId!),
-      checkUserCollected(project.value.projectId!)
-    ]);
+    const [likedRes, collectedRes] = await Promise.all([checkUserLiked(project.value.projectId!), checkUserCollected(project.value.projectId!)]);
     project.value.userLiked = likedRes.data;
     project.value.userCollected = collectedRes.data;
   } catch (error) {
@@ -300,20 +304,58 @@ const checkUserInteractions = async () => {
 
 // 获取项目成员（替换模拟数据为真实API调用）
 const getProjectMembers = async () => {
+  if (!project.value?.projectId) return;
+
   membersLoading.value = true;
   try {
     // 使用真实API调用替换模拟数据
     const [membersResponse, pendingCountResponse] = await Promise.all([
-      getProjectMemberList(project.value.projectId!, 1, 100), // 添加分页参数，显示100个成员
-      getPendingApplicationsCount(project.value.projectId!)
+      getProjectMemberList(project.value.projectId, 1, 6), // 只显示前6个成员作为预览
+      getPendingApplicationsCount(project.value.projectId).catch(() => ({ data: 0 })) // 如果获取失败就设为0
     ]);
-    
-    memberList.value = membersResponse.data || [];
+
+    console.log('成员列表响应:', membersResponse); // 调试日志
+
+    // 处理后端返回的数据结构
+    const responseData = membersResponse as any;
+    let rawMembers = [];
+
+    // 尝试不同的数据结构路径
+    if (responseData.rows) {
+      rawMembers = responseData.rows;
+    } else if (responseData.data && Array.isArray(responseData.data)) {
+      rawMembers = responseData.data;
+    } else if (responseData.data && responseData.data.rows) {
+      rawMembers = responseData.data.rows;
+    } else if (Array.isArray(responseData)) {
+      rawMembers = responseData;
+    }
+
+    // 映射成员数据，确保字段正确
+    memberList.value = rawMembers.map((member: any) => ({
+      memberId: member.memberId,
+      userName: member.userName || member.memberName || member.realName || '未知用户',
+      email: member.email || member.contactInfo || '',
+      avatarUrl: member.avatarUrl || member.avatar,
+      memberRole: member.memberRole || member.role || '',
+      role: member.memberRole || member.role || '',
+      department: member.department || member.college || member.major || '',
+      skills: member.skills || member.major || '',
+      joinTime: member.joinTime || '',
+      status: member.status || member.memberStatus || 'active',
+      isLeader: member.isLeader,
+      contributionScore: member.contributionScore || 0,
+      completedTasks: member.completedTasks || 0,
+      totalTasks: member.totalTasks || 0
+    }));
+
     pendingApplications.value = pendingCountResponse.data || 0;
-    
+
+    console.log('处理后的成员列表:', memberList.value); // 调试日志
   } catch (error) {
     console.error('获取项目成员失败:', error);
-    ElMessage.error('获取项目成员失败');
+    // 不显示错误消息，避免影响用户体验
+    // ElMessage.error('获取项目成员失败');
     // 发生错误时保留空数组，避免页面崩溃
     memberList.value = [];
     pendingApplications.value = 0;
@@ -335,7 +377,7 @@ const handleApply = () => {
 // 点赞
 const handleLike = async () => {
   if (!project.value) return;
-  
+
   try {
     if (!project.value.userLiked) {
       await likeProject(project.value.projectId!);
@@ -359,7 +401,7 @@ const handleLike = async () => {
 // 收藏
 const handleCollect = async () => {
   if (!project.value) return;
-  
+
   try {
     if (!project.value.userCollected) {
       await collectProject(project.value.projectId!);
@@ -496,7 +538,7 @@ onMounted(() => {
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7));
       display: flex;
       align-items: flex-start;
       justify-content: flex-end;
@@ -644,15 +686,22 @@ onMounted(() => {
 }
 
 .members-content {
+  .empty-members {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+  }
+
   .member-list {
     display: grid;
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
 
     .member-item {
       display: flex;
       align-items: center;
-      gap: 15px;
-      padding: 15px;
+      gap: 12px;
+      padding: 12px;
       background: #f8f9fa;
       border-radius: 10px;
       transition: all 0.3s ease;
@@ -660,32 +709,39 @@ onMounted(() => {
       &:hover {
         background: #e9ecef;
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
 
       .member-info {
         flex: 1;
+        min-width: 0; // 防止文字溢出
 
         .member-name {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           font-weight: 600;
           color: #2c3e50;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
+          font-size: 0.95rem;
+
+          // 文字溢出处理
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .member-role {
           color: #666;
-          font-size: 0.9rem;
-          margin-bottom: 5px;
+          font-size: 0.85rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
+      }
 
-        .member-stats {
-          display: flex;
-          gap: 15px;
-          font-size: 0.8rem;
-          color: #888;
-        }
+      .el-avatar {
+        flex-shrink: 0; // 防止头像被压缩
       }
     }
   }
@@ -783,5 +839,25 @@ onMounted(() => {
   .detail-body .el-col {
     span: 24 !important;
   }
+
+  // 移动端成员列表样式
+  .members-content .member-list {
+    grid-template-columns: 1fr; // 移动端单列显示
+    gap: 10px;
+
+    .member-item {
+      padding: 10px;
+
+      .member-info {
+        .member-name {
+          font-size: 0.9rem;
+        }
+
+        .member-role {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
 }
-</style> 
+</style>

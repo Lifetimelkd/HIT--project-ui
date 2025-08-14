@@ -3,86 +3,55 @@
     <!-- 操作栏 -->
     <div class="table-header">
       <div class="search-area">
-        <el-input
-          v-model="queryParams.projectId"
-          placeholder="项目ID"
-          style="width: 120px;"
-          clearable
-          @clear="handleQuery"
-          @keyup.enter="handleQuery"
-        >
+        <el-input v-model="queryParams.projectId" placeholder="项目ID" style="width: 120px" clearable @clear="handleQuery" @keyup.enter="handleQuery">
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        
+
         <el-input
           v-model="queryParams.userId"
           placeholder="用户ID"
-          style="width: 120px; margin-left: 10px;"
+          style="width: 120px; margin-left: 10px"
           clearable
           @clear="handleQuery"
           @keyup.enter="handleQuery"
         />
-        
-        <el-select
-          v-model="queryParams.memberStatus"
-          placeholder="成员状态"
-          style="width: 120px; margin-left: 10px;"
-          clearable
-          @change="handleQuery"
-        >
+
+        <el-select v-model="queryParams.memberStatus" placeholder="成员状态" style="width: 120px; margin-left: 10px" clearable @change="handleQuery">
           <el-option label="活跃" value="active" />
           <el-option label="非活跃" value="inactive" />
           <el-option label="已离开" value="left" />
         </el-select>
-        
-        <el-select
-          v-model="queryParams.isLeader"
-          placeholder="是否领导"
-          style="width: 120px; margin-left: 10px;"
-          clearable
-          @change="handleQuery"
-        >
+
+        <el-select v-model="queryParams.isLeader" placeholder="是否领导" style="width: 120px; margin-left: 10px" clearable @change="handleQuery">
           <el-option label="是" value="1" />
           <el-option label="否" value="0" />
         </el-select>
-        
-        <el-button type="primary" @click="handleQuery" style="margin-left: 10px;">
+
+        <el-button type="primary" @click="handleQuery" style="margin-left: 10px">
           <el-icon><Search /></el-icon>
           搜索
         </el-button>
-        
-        <el-button @click="resetQuery" style="margin-left: 10px;">
+
+        <el-button @click="resetQuery" style="margin-left: 10px">
           <el-icon><Refresh /></el-icon>
           重置
         </el-button>
       </div>
-      
+
       <div class="action-area">
-        <el-button
-          type="success"
-          @click="handleExport"
-          :loading="exportLoading"
-        >
+        <el-button type="success" @click="handleExport" :loading="exportLoading">
           <el-icon><Download /></el-icon>
           导出
         </el-button>
-        
-        <el-button
-          type="danger"
-          @click="handleBatchRemove"
-          :disabled="selectedMembers.length === 0"
-        >
+
+        <el-button type="danger" @click="handleBatchRemove" :disabled="selectedMembers.length === 0">
           <el-icon><Delete /></el-icon>
           批量移除
         </el-button>
-        
-        <el-button
-          type="warning"
-          @click="handleBatchOperation"
-          :disabled="selectedMembers.length === 0"
-        >
+
+        <el-button type="warning" @click="handleBatchOperation" :disabled="selectedMembers.length === 0">
           <el-icon><Operation /></el-icon>
           批量操作
         </el-button>
@@ -90,20 +59,13 @@
     </div>
 
     <!-- 数据表格 -->
-    <el-table
-      v-loading="loading"
-      :data="memberList"
-      @selection-change="handleSelectionChange"
-      row-key="memberId"
-      border
-      stripe
-    >
+    <el-table v-loading="loading" :data="memberList" @selection-change="handleSelectionChange" row-key="memberId" border stripe>
       <el-table-column type="selection" width="50" />
-      
+
       <el-table-column prop="memberId" label="成员ID" width="80" />
-      
+
       <el-table-column prop="projectId" label="项目ID" width="80" />
-      
+
       <el-table-column label="项目信息" min-width="200">
         <template #default="{ row }">
           <div class="project-info">
@@ -112,9 +74,9 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="userId" label="用户ID" width="80" />
-      
+
       <el-table-column label="用户信息" min-width="150">
         <template #default="{ row }">
           <div class="user-info">
@@ -128,13 +90,13 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="memberRole" label="角色" width="120">
         <template #default="{ row }">
           <el-tag type="info">{{ row.memberRole || '无' }}</el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="getMemberStatusType(row.memberStatus)">
@@ -142,14 +104,14 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="权限" width="100">
         <template #default="{ row }">
           <el-tag v-if="row.isLeader === '1'" type="warning">领导者</el-tag>
           <el-tag v-else type="info">普通成员</el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column label="表现数据" width="160">
         <template #default="{ row }">
           <div class="performance-info">
@@ -160,19 +122,19 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="joinTime" label="加入时间" width="160">
         <template #default="{ row }">
           {{ formatDateTime(row.joinTime) }}
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="leaveTime" label="离开时间" width="160">
         <template #default="{ row }">
           {{ row.leaveTime ? formatDateTime(row.leaveTime) : '-' }}
         </template>
       </el-table-column>
-      
+
       <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
           <el-button-group>
@@ -211,12 +173,7 @@
     </div>
 
     <!-- 批量操作对话框 -->
-    <el-dialog
-      v-model="batchDialogVisible"
-      title="批量操作"
-      width="500px"
-      append-to-body
-    >
+    <el-dialog v-model="batchDialogVisible" title="批量操作" width="500px" append-to-body>
       <el-form :model="batchForm" label-width="100px">
         <el-form-item label="操作类型">
           <el-select v-model="batchForm.operation" placeholder="请选择操作类型">
@@ -225,7 +182,7 @@
             <el-option label="批量评分" value="performance" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'status'" label="成员状态">
           <el-select v-model="batchForm.memberStatus" placeholder="请选择状态">
             <el-option label="活跃" value="active" />
@@ -233,25 +190,19 @@
             <el-option label="已离开" value="left" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'leader'" label="领导者设置">
           <el-radio-group v-model="batchForm.isLeader">
             <el-radio value="1">设为领导者</el-radio>
             <el-radio value="0">取消领导者</el-radio>
           </el-radio-group>
         </el-form-item>
-        
+
         <el-form-item v-if="batchForm.operation === 'performance'" label="贡献度评分">
-          <el-input-number
-            v-model="batchForm.contributionScore"
-            :min="0"
-            :max="100"
-            :precision="2"
-            placeholder="0.00"
-          />
+          <el-input-number v-model="batchForm.contributionScore" :min="0" :max="100" :precision="2" placeholder="0.00" />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="batchDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="confirmBatchOperation">确定</el-button>
@@ -259,12 +210,7 @@
     </el-dialog>
 
     <!-- 成员表现详情对话框 -->
-    <el-dialog
-      v-model="performanceDialogVisible"
-      title="成员表现详情"
-      width="600px"
-      append-to-body
-    >
+    <el-dialog v-model="performanceDialogVisible" title="成员表现详情" width="600px" append-to-body>
       <div v-if="currentMember" class="performance-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="成员姓名">{{ currentMember.userName }}</el-descriptions-item>
@@ -278,8 +224,8 @@
           <el-descriptions-item label="工作时长">{{ currentMember.workHours || 0 }} 小时</el-descriptions-item>
           <el-descriptions-item label="加入时间">{{ formatDateTime(currentMember.joinTime) }}</el-descriptions-item>
         </el-descriptions>
-        
-        <div class="performance-actions" style="margin-top: 20px;">
+
+        <div class="performance-actions" style="margin-top: 20px">
           <el-button type="primary" @click="handleEditPerformance">编辑表现</el-button>
           <el-button @click="handleViewTasks">查看任务</el-button>
         </div>
@@ -294,12 +240,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import request from '@/utils/request';
 
 // 修复: 导入真实的API接口
-import { 
-  getProjectMemberList,
-  removeProjectMember,
-  changeProjectMemberRole,
-  searchUsers
-} from '@/api/hit/project';
+import { getProjectMemberList, removeProjectMember, changeProjectMemberRole, searchUsers } from '@/api/hit/project';
 
 interface MemberInfo {
   memberId: number;
@@ -449,16 +390,12 @@ const handleEditRole = (row: MemberInfo) => {
 // 修复: 设置领导者
 const handleSetLeader = async (row: MemberInfo) => {
   const action = row.isLeader === '1' ? '取消' : '设置';
-  await ElMessageBox.confirm(
-    `确定要${action}该成员的领导者身份吗？`,
-    '确认操作',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  );
-  
+  await ElMessageBox.confirm(`确定要${action}该成员的领导者身份吗？`, '确认操作', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
+
   try {
     // 调用API设置领导者
     await request({
@@ -476,16 +413,12 @@ const handleSetLeader = async (row: MemberInfo) => {
 
 // 修复: 移除成员
 const handleRemoveMember = async (row: MemberInfo) => {
-  await ElMessageBox.confirm(
-    `确定要移除成员 "${row.userName}" 吗？`,
-    '确认移除',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  );
-  
+  await ElMessageBox.confirm(`确定要移除成员 "${row.userName}" 吗？`, '确认移除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
+
   try {
     // 调用API移除成员
     await request({
@@ -507,20 +440,16 @@ const handleBatchRemove = async () => {
     ElMessage.warning('请先选择要移除的成员');
     return;
   }
-  
-  await ElMessageBox.confirm(
-    `确定要移除选中的 ${selectedMembers.value.length} 个成员吗？`,
-    '确认批量移除',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  );
-  
+
+  await ElMessageBox.confirm(`确定要移除选中的 ${selectedMembers.value.length} 个成员吗？`, '确认批量移除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
+
   try {
     // 调用API批量移除成员
-    const memberIds = selectedMembers.value.map(member => member.memberId);
+    const memberIds = selectedMembers.value.map((member) => member.memberId);
     await request({
       url: '/hit/project/member/batch-remove',
       method: 'put',
@@ -549,10 +478,10 @@ const confirmBatchOperation = async () => {
     ElMessage.warning('请选择操作类型');
     return;
   }
-  
+
   try {
-    const memberIds = selectedMembers.value.map(member => member.memberId);
-    
+    const memberIds = selectedMembers.value.map((member) => member.memberId);
+
     switch (batchForm.operation) {
       case 'status':
         await request({
@@ -582,7 +511,7 @@ const confirmBatchOperation = async () => {
         }
         break;
     }
-    
+
     ElMessage.success('批量操作成功');
     batchDialogVisible.value = false;
     getMemberList();
@@ -727,4 +656,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>

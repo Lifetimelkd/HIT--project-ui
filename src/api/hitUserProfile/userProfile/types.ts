@@ -113,7 +113,6 @@ export interface UserProfileVO {
    * 关联部门id
    */
   deptId: string | number;
-
 }
 
 export interface UserProfileForm extends BaseEntity {
@@ -231,11 +230,9 @@ export interface UserProfileForm extends BaseEntity {
    * 关联部门id
    */
   deptId?: string | number;
-
 }
 
 export interface UserProfileQuery extends PageQuery {
-
   /**
    * 关联用户id
    */
@@ -346,11 +343,8 @@ export interface UserProfileQuery extends PageQuery {
    */
   deptId?: string | number;
 
-    /**
-     * 日期范围参数
-     */
-    params?: any;
+  /**
+   * 日期范围参数
+   */
+  params?: any;
 }
-
-
-

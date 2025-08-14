@@ -14,16 +14,16 @@
               <el-input v-model="queryParams.realName" placeholder="请输入真实姓名" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="所属学院" prop="college">
-              <el-select v-model="queryParams.college" placeholder="请选择所属学院" clearable >
-                <el-option v-for="dict in hit_college" :key="dict.value" :label="dict.label" :value="dict.value"/>
+              <el-select v-model="queryParams.college" placeholder="请选择所属学院" clearable>
+                <el-option v-for="dict in hit_college" :key="dict.value" :label="dict.label" :value="dict.value" />
               </el-select>
             </el-form-item>
             <el-form-item label="专业" prop="major">
               <el-input v-model="queryParams.major" placeholder="请输入专业" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="年级" prop="grade">
-              <el-select v-model="queryParams.grade" placeholder="请选择年级" clearable >
-                <el-option v-for="dict in hit_grade" :key="dict.value" :label="dict.label" :value="dict.value"/>
+              <el-select v-model="queryParams.grade" placeholder="请选择年级" clearable>
+                <el-option v-for="dict in hit_grade" :key="dict.value" :label="dict.label" :value="dict.value" />
               </el-select>
             </el-form-item>
             <el-form-item label="班级" prop="className">
@@ -87,10 +87,20 @@
             <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['hitUserProfile:userProfile:add']">新增</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['hitUserProfile:userProfile:edit']">修改</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['hitUserProfile:userProfile:edit']"
+              >修改</el-button
+            >
           </el-col>
           <el-col :span="1.5">
-            <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['hitUserProfile:userProfile:remove']">删除</el-button>
+            <el-button
+              type="danger"
+              plain
+              icon="Delete"
+              :disabled="multiple"
+              @click="handleDelete()"
+              v-hasPermi="['hitUserProfile:userProfile:remove']"
+              >删除</el-button
+            >
           </el-col>
           <el-col :span="1.5">
             <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['hitUserProfile:userProfile:export']">导出</el-button>
@@ -107,13 +117,13 @@
         <el-table-column label="真实姓名" align="center" prop="realName" />
         <el-table-column label="所属学院" align="center" prop="college">
           <template #default="scope">
-            <dict-tag :options="hit_college" :value="scope.row.college"/>
+            <dict-tag :options="hit_college" :value="scope.row.college" />
           </template>
         </el-table-column>
         <el-table-column label="专业" align="center" prop="major" />
         <el-table-column label="年级" align="center" prop="grade">
           <template #default="scope">
-            <dict-tag :options="hit_grade" :value="scope.row.grade"/>
+            <dict-tag :options="hit_grade" :value="scope.row.grade" />
           </template>
         </el-table-column>
         <el-table-column label="班级" align="center" prop="className" />
@@ -135,10 +145,22 @@
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
             <el-tooltip content="修改" placement="top">
-              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['hitUserProfile:userProfile:edit']"></el-button>
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                @click="handleUpdate(scope.row)"
+                v-hasPermi="['hitUserProfile:userProfile:edit']"
+              ></el-button>
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
-              <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['hitUserProfile:userProfile:remove']"></el-button>
+              <el-button
+                link
+                type="primary"
+                icon="Delete"
+                @click="handleDelete(scope.row)"
+                v-hasPermi="['hitUserProfile:userProfile:remove']"
+              ></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -160,12 +182,7 @@
         </el-form-item>
         <el-form-item label="所属学院" prop="college">
           <el-select v-model="form.college" placeholder="请选择所属学院">
-            <el-option
-                v-for="dict in hit_college"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-            ></el-option>
+            <el-option v-for="dict in hit_college" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="专业" prop="major">
@@ -173,12 +190,7 @@
         </el-form-item>
         <el-form-item label="年级" prop="grade">
           <el-select v-model="form.grade" placeholder="请选择年级">
-            <el-option
-                v-for="dict in hit_grade"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-            ></el-option>
+            <el-option v-for="dict in hit_grade" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="班级" prop="className">
@@ -203,16 +215,16 @@
           <el-input v-model="form.linkedin" placeholder="请输入LinkedIn地址" />
         </el-form-item>
         <el-form-item label="个人简介" prop="personalIntro">
-            <el-input v-model="form.personalIntro" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.personalIntro" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="职业规划" prop="careerPlan">
-            <el-input v-model="form.careerPlan" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.careerPlan" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="头像地址" prop="avatarUrl">
-            <el-input v-model="form.avatarUrl" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.avatarUrl" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="封面地址" prop="coverUrl">
-            <el-input v-model="form.coverUrl" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.coverUrl" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="信誉积分" prop="reputationScore">
           <el-input v-model="form.reputationScore" placeholder="请输入信誉积分" />
@@ -285,9 +297,9 @@ const initFormData: UserProfileForm = {
   completedProjects: undefined,
   status: undefined,
   deptId: undefined
-}
+};
 const data = reactive<PageData<UserProfileForm, UserProfileQuery>>({
-  form: {...initFormData},
+  form: { ...initFormData },
   queryParams: {
     pageNum: 1,
     pageSize: 10,
@@ -313,73 +325,30 @@ const data = reactive<PageData<UserProfileForm, UserProfileQuery>>({
     completedProjects: undefined,
     status: undefined,
     deptId: undefined,
-    params: {
-    }
+    params: {}
   },
   rules: {
-    studentId: [
-      { required: true, message: "学号不能为空", trigger: "blur" }
-    ],
-    realName: [
-      { required: true, message: "真实姓名不能为空", trigger: "blur" }
-    ],
-    college: [
-      { required: true, message: "所属学院不能为空", trigger: "change" }
-    ],
-    major: [
-      { required: true, message: "专业不能为空", trigger: "blur" }
-    ],
-    grade: [
-      { required: true, message: "年级不能为空", trigger: "change" }
-    ],
-    className: [
-      { required: true, message: "班级不能为空", trigger: "blur" }
-    ],
-    phone: [
-      { required: true, message: "手机号不能为空", trigger: "blur" }
-    ],
-    email: [
-      { required: true, message: "邮箱不能为空", trigger: "blur" }
-    ],
-    qq: [
-      { required: true, message: "QQ号不能为空", trigger: "blur" }
-    ],
-    wechat: [
-      { required: true, message: "微信号不能为空", trigger: "blur" }
-    ],
-    github: [
-      { required: true, message: "GitHub地址不能为空", trigger: "blur" }
-    ],
-    linkedin: [
-      { required: true, message: "LinkedIn地址不能为空", trigger: "blur" }
-    ],
-    personalIntro: [
-      { required: true, message: "个人简介不能为空", trigger: "blur" }
-    ],
-    careerPlan: [
-      { required: true, message: "职业规划不能为空", trigger: "blur" }
-    ],
-    avatarUrl: [
-      { required: true, message: "头像地址不能为空", trigger: "blur" }
-    ],
-    coverUrl: [
-      { required: true, message: "封面地址不能为空", trigger: "blur" }
-    ],
-    reputationScore: [
-      { required: true, message: "信誉积分不能为空", trigger: "blur" }
-    ],
-    totalProjects: [
-      { required: true, message: "参与项目总数不能为空", trigger: "blur" }
-    ],
-    completedProjects: [
-      { required: true, message: "完成项目数不能为空", trigger: "blur" }
-    ],
-    status: [
-      { required: true, message: "状态(0正常 1禁用)不能为空", trigger: "change" }
-    ],
-    deptId: [
-      { required: true, message: "关联部门id不能为空", trigger: "blur" }
-    ]
+    studentId: [{ required: true, message: '学号不能为空', trigger: 'blur' }],
+    realName: [{ required: true, message: '真实姓名不能为空', trigger: 'blur' }],
+    college: [{ required: true, message: '所属学院不能为空', trigger: 'change' }],
+    major: [{ required: true, message: '专业不能为空', trigger: 'blur' }],
+    grade: [{ required: true, message: '年级不能为空', trigger: 'change' }],
+    className: [{ required: true, message: '班级不能为空', trigger: 'blur' }],
+    phone: [{ required: true, message: '手机号不能为空', trigger: 'blur' }],
+    email: [{ required: true, message: '邮箱不能为空', trigger: 'blur' }],
+    qq: [{ required: true, message: 'QQ号不能为空', trigger: 'blur' }],
+    wechat: [{ required: true, message: '微信号不能为空', trigger: 'blur' }],
+    github: [{ required: true, message: 'GitHub地址不能为空', trigger: 'blur' }],
+    linkedin: [{ required: true, message: 'LinkedIn地址不能为空', trigger: 'blur' }],
+    personalIntro: [{ required: true, message: '个人简介不能为空', trigger: 'blur' }],
+    careerPlan: [{ required: true, message: '职业规划不能为空', trigger: 'blur' }],
+    avatarUrl: [{ required: true, message: '头像地址不能为空', trigger: 'blur' }],
+    coverUrl: [{ required: true, message: '封面地址不能为空', trigger: 'blur' }],
+    reputationScore: [{ required: true, message: '信誉积分不能为空', trigger: 'blur' }],
+    totalProjects: [{ required: true, message: '参与项目总数不能为空', trigger: 'blur' }],
+    completedProjects: [{ required: true, message: '完成项目数不能为空', trigger: 'blur' }],
+    status: [{ required: true, message: '状态(0正常 1禁用)不能为空', trigger: 'change' }],
+    deptId: [{ required: true, message: '关联部门id不能为空', trigger: 'blur' }]
   }
 });
 
@@ -392,55 +361,55 @@ const getList = async () => {
   userProfileList.value = res.rows;
   total.value = res.total;
   loading.value = false;
-}
+};
 
 /** 取消按钮 */
 const cancel = () => {
   reset();
   dialog.visible = false;
-}
+};
 
 /** 表单重置 */
 const reset = () => {
-  form.value = {...initFormData};
+  form.value = { ...initFormData };
   userProfileFormRef.value?.resetFields();
-}
+};
 
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.value.pageNum = 1;
   getList();
-}
+};
 
 /** 重置按钮操作 */
 const resetQuery = () => {
   queryFormRef.value?.resetFields();
   handleQuery();
-}
+};
 
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: UserProfileVO[]) => {
-  ids.value = selection.map(item => item.profileId);
+  ids.value = selection.map((item) => item.profileId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
-}
+};
 
 /** 新增按钮操作 */
 const handleAdd = () => {
   reset();
   dialog.visible = true;
-  dialog.title = "添加用户扩展档案";
-}
+  dialog.title = '添加用户扩展档案';
+};
 
 /** 修改按钮操作 */
 const handleUpdate = async (row?: UserProfileVO) => {
   reset();
-  const _profileId = row?.profileId || ids.value[0]
+  const _profileId = row?.profileId || ids.value[0];
   const res = await getUserProfile(_profileId);
   Object.assign(form.value, res.data);
   dialog.visible = true;
-  dialog.title = "修改用户扩展档案";
-}
+  dialog.title = '修改用户扩展档案';
+};
 
 /** 提交按钮 */
 const submitForm = () => {
@@ -448,32 +417,36 @@ const submitForm = () => {
     if (valid) {
       buttonLoading.value = true;
       if (form.value.profileId) {
-        await updateUserProfile(form.value).finally(() =>  buttonLoading.value = false);
+        await updateUserProfile(form.value).finally(() => (buttonLoading.value = false));
       } else {
-        await addUserProfile(form.value).finally(() =>  buttonLoading.value = false);
+        await addUserProfile(form.value).finally(() => (buttonLoading.value = false));
       }
-      proxy?.$modal.msgSuccess("操作成功");
+      proxy?.$modal.msgSuccess('操作成功');
       dialog.visible = false;
       await getList();
     }
   });
-}
+};
 
 /** 删除按钮操作 */
 const handleDelete = async (row?: UserProfileVO) => {
   const _profileIds = row?.profileId || ids.value;
-  await proxy?.$modal.confirm('是否确认删除用户扩展档案编号为"' + _profileIds + '"的数据项？').finally(() => loading.value = false);
+  await proxy?.$modal.confirm('是否确认删除用户扩展档案编号为"' + _profileIds + '"的数据项？').finally(() => (loading.value = false));
   await delUserProfile(_profileIds);
-  proxy?.$modal.msgSuccess("删除成功");
+  proxy?.$modal.msgSuccess('删除成功');
   await getList();
-}
+};
 
 /** 导出按钮操作 */
 const handleExport = () => {
-  proxy?.download('hitUserProfile/userProfile/export', {
-    ...queryParams.value
-  }, `userProfile_${new Date().getTime()}.xlsx`)
-}
+  proxy?.download(
+    'hitUserProfile/userProfile/export',
+    {
+      ...queryParams.value
+    },
+    `userProfile_${new Date().getTime()}.xlsx`
+  );
+};
 
 onMounted(() => {
   getList();

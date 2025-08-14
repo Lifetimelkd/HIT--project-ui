@@ -20,23 +20,23 @@
                 />
               </div>
             </template>
-            <div id="projectTrendChart" style="height: 300px;"></div>
+            <div id="projectTrendChart" style="height: 300px"></div>
           </el-card>
 
           <!-- 项目类型分布 -->
-          <el-card class="chart-card" shadow="hover" style="margin-top: 20px;">
+          <el-card class="chart-card" shadow="hover" style="margin-top: 20px">
             <template #header>
               <h3>项目类型分布</h3>
             </template>
-            <div id="projectTypeChart" style="height: 300px;"></div>
+            <div id="projectTypeChart" style="height: 300px"></div>
           </el-card>
 
           <!-- 申请处理效率 -->
-          <el-card class="chart-card" shadow="hover" style="margin-top: 20px;">
+          <el-card class="chart-card" shadow="hover" style="margin-top: 20px">
             <template #header>
               <h3>申请处理效率</h3>
             </template>
-            <div id="applicationChart" style="height: 300px;"></div>
+            <div id="applicationChart" style="height: 300px"></div>
           </el-card>
         </div>
       </el-col>
@@ -49,7 +49,7 @@
             <template #header>
               <h3>实时数据概览</h3>
             </template>
-            
+
             <div class="stats-list">
               <div class="stats-item">
                 <div class="stats-icon project-icon">
@@ -110,17 +110,13 @@
           </el-card>
 
           <!-- 热门项目排行 -->
-          <el-card class="ranking-card" shadow="hover" style="margin-top: 20px;">
+          <el-card class="ranking-card" shadow="hover" style="margin-top: 20px">
             <template #header>
               <h3>热门项目排行</h3>
             </template>
-            
+
             <div class="ranking-list">
-              <div
-                v-for="(project, index) in hotProjects"
-                :key="project.id"
-                class="ranking-item"
-              >
+              <div v-for="(project, index) in hotProjects" :key="project.id" class="ranking-item">
                 <div class="ranking-number" :class="`rank-${index + 1}`">
                   {{ index + 1 }}
                 </div>
@@ -137,11 +133,11 @@
           </el-card>
 
           <!-- 系统状态监控 -->
-          <el-card class="monitor-card" shadow="hover" style="margin-top: 20px;">
+          <el-card class="monitor-card" shadow="hover" style="margin-top: 20px">
             <template #header>
               <h3>系统状态监控</h3>
             </template>
-            
+
             <div class="monitor-list">
               <div class="monitor-item">
                 <div class="monitor-label">服务状态</div>
@@ -195,13 +191,13 @@ const hotProjects = ref([]);
 // 修复: 图表初始化
 const initCharts = async () => {
   await nextTick();
-  
+
   // 这里应该初始化 ECharts 图表
   // 由于没有实际的 ECharts 依赖，我们模拟图表初始化
   console.log('初始化项目趋势图表...');
   console.log('初始化项目类型分布图表...');
   console.log('初始化申请处理效率图表...');
-  
+
   // 调用真实API加载图表数据
   await loadChartData();
 };
@@ -275,7 +271,7 @@ const loadChartData = async () => {
   } catch (error) {
     console.error('加载图表数据失败:', error);
     ElMessage.error('加载图表数据失败');
-    
+
     // 设置默认数据
     realTimeStats.totalProjects = 0;
     realTimeStats.projectsIncrease = 0;
@@ -500,4 +496,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>

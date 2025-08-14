@@ -17,12 +17,7 @@
       <el-card class="filter-card">
         <el-row :gutter="20" class="filter-row">
           <el-col :span="8">
-            <el-input
-              v-model="queryParams.projectName"
-              placeholder="搜索项目名称"
-              clearable
-              @keyup.enter="handleQuery"
-            >
+            <el-input v-model="queryParams.projectName" placeholder="搜索项目名称" clearable @keyup.enter="handleQuery">
               <template #prefix>
                 <el-icon><Search /></el-icon>
               </template>
@@ -66,34 +61,10 @@
     <div class="tags-section">
       <div class="tag-group">
         <span class="tag-label">快速筛选：</span>
-        <el-tag
-          :type="activeTag === 'all' ? 'primary' : undefined"
-          @click="handleTagFilter('all')"
-          class="filter-tag"
-        >
-          全部项目
-        </el-tag>
-        <el-tag
-          :type="activeTag === 'featured' ? 'primary' : undefined"
-          @click="handleTagFilter('featured')"
-          class="filter-tag"
-        >
-          精选项目
-        </el-tag>
-        <el-tag
-          :type="activeTag === 'urgent' ? 'primary' : undefined"
-          @click="handleTagFilter('urgent')"
-          class="filter-tag"
-        >
-          紧急招募
-        </el-tag>
-        <el-tag
-          :type="activeTag === 'credit' ? 'primary' : undefined"
-          @click="handleTagFilter('credit')"
-          class="filter-tag"
-        >
-          学分认定
-        </el-tag>
+        <el-tag :type="activeTag === 'all' ? 'primary' : undefined" @click="handleTagFilter('all')" class="filter-tag"> 全部项目 </el-tag>
+        <el-tag :type="activeTag === 'featured' ? 'primary' : undefined" @click="handleTagFilter('featured')" class="filter-tag"> 精选项目 </el-tag>
+        <el-tag :type="activeTag === 'urgent' ? 'primary' : undefined" @click="handleTagFilter('urgent')" class="filter-tag"> 紧急招募 </el-tag>
+        <el-tag :type="activeTag === 'credit' ? 'primary' : undefined" @click="handleTagFilter('credit')" class="filter-tag"> 学分认定 </el-tag>
       </div>
     </div>
 
@@ -101,14 +72,10 @@
     <div class="project-list">
       <el-row :gutter="20" v-loading="loading">
         <el-col :span="8" v-for="project in projectList" :key="project.projectId">
-          <el-card class="project-card" @click="handleDetail(project.projectId!)">
+          <el-card class="project-card" @click="handleDetail(project.projectId)">
             <!-- 项目封面 -->
             <div class="project-cover">
-              <img
-                :src="project.coverImage || '/default-project-cover.jpg'"
-                :alt="project.projectName"
-                class="cover-image"
-              />
+              <img :src="project.coverImage || '/default-project-cover.jpg'" :alt="project.projectName" class="cover-image" />
               <div class="cover-overlay">
                 <div class="project-tags">
                   <el-tag v-if="project.isFeatured === '1'" type="warning" size="small">精选</el-tag>
@@ -127,7 +94,7 @@
             <div class="project-info">
               <h3 class="project-title">{{ project.projectName }}</h3>
               <p class="project-description">{{ project.projectDescription }}</p>
-              
+
               <div class="project-meta">
                 <div class="meta-item">
                   <el-icon><User /></el-icon>
@@ -163,19 +130,11 @@
                   {{ getStatusText(project.recruitmentStatus!) }}
                 </el-tag>
                 <div class="action-buttons">
-                  <el-button
-                    size="small"
-                    :type="project.userLiked ? 'primary' : 'default'"
-                    @click.stop="handleLike(project)"
-                  >
+                  <el-button size="small" :type="project.userLiked ? 'primary' : 'default'" @click.stop="handleLike(project)">
                     <el-icon><Star /></el-icon>
                     {{ project.userLiked ? '已点赞' : '点赞' }}
                   </el-button>
-                  <el-button
-                    size="small"
-                    :type="project.userCollected ? 'warning' : 'default'"
-                    @click.stop="handleCollect(project)"
-                  >
+                  <el-button size="small" :type="project.userCollected ? 'warning' : 'default'" @click.stop="handleCollect(project)">
                     <el-icon><Collection /></el-icon>
                     {{ project.userCollected ? '已收藏' : '收藏' }}
                   </el-button>
@@ -258,9 +217,9 @@ const getProjectList = async () => {
     } else {
       response = await listPublicProject(queryParams);
     }
-    
+
     console.log('API响应数据:', response);
-    
+
     // 由于axios响应拦截器已经提取了data，response就是实际的数据
     // API返回格式: { code: 200, msg: "查询成功", rows: [...], total: 4 }
     if (response && typeof response === 'object') {
@@ -273,8 +232,7 @@ const getProjectList = async () => {
       else if (Array.isArray(response)) {
         projectList.value = response;
         total.value = response.length;
-      }
-      else {
+      } else {
         console.warn('未识别的响应格式:', response);
         projectList.value = [];
         total.value = 0;
@@ -283,10 +241,10 @@ const getProjectList = async () => {
       projectList.value = [];
       total.value = 0;
     }
-    
+
     console.log('解析后的项目列表:', projectList.value);
     console.log('总数:', total.value);
-    
+
     // 只有当成功获取到项目数据时才检查用户交互状态
     if (projectList.value.length > 0) {
       await checkUserInteractions();
@@ -306,10 +264,7 @@ const checkUserInteractions = async () => {
   // 启用用户交互状态检查
   for (const project of projectList.value) {
     try {
-      const [likedRes, collectedRes] = await Promise.all([
-        checkUserLiked(project.projectId!),
-        checkUserCollected(project.projectId!)
-      ]);
+      const [likedRes, collectedRes] = await Promise.all([checkUserLiked(project.projectId), checkUserCollected(project.projectId)]);
       project.userLiked = likedRes.data;
       project.userCollected = collectedRes.data;
     } catch (error) {
@@ -349,7 +304,7 @@ const handleCreate = () => {
 };
 
 // 查看详情
-const handleDetail = async (projectId: number) => {
+const handleDetail = async (projectId: string) => {
   // 直接跳转到详情页，让详情页面在获取项目信息时自动增加浏览量
   router.push(`/hit/project/detail/${projectId}`);
 };
@@ -358,7 +313,7 @@ const handleDetail = async (projectId: number) => {
 const handleLike = async (project: ProjectInfo) => {
   try {
     if (!project.userLiked) {
-      await likeProject(project.projectId!);
+      await likeProject(project.projectId);
       project.likeCount = (project.likeCount || 0) + 1;
       project.userLiked = true;
       ElMessage.success('点赞成功');
@@ -366,7 +321,7 @@ const handleLike = async (project: ProjectInfo) => {
       // 暂时不支持取消点赞，等待后端实现
       ElMessage.info('已经点赞过了');
       // TODO: 等后端实现取消点赞接口后启用
-      // await unlikeProject(project.projectId!);
+      // await unlikeProject(project.projectId);
       // project.likeCount = Math.max((project.likeCount || 0) - 1, 0);
       // project.userLiked = false;
       // ElMessage.success('取消点赞');
@@ -380,7 +335,7 @@ const handleLike = async (project: ProjectInfo) => {
 const handleCollect = async (project: ProjectInfo) => {
   try {
     if (!project.userCollected) {
-      await collectProject(project.projectId!);
+      await collectProject(project.projectId);
       project.collectCount = (project.collectCount || 0) + 1;
       project.userCollected = true;
       ElMessage.success('收藏成功');
@@ -388,7 +343,7 @@ const handleCollect = async (project: ProjectInfo) => {
       // 暂时不支持取消收藏，等待后端实现
       ElMessage.info('已经收藏过了');
       // TODO: 等后端实现取消收藏接口后启用
-      // await uncollectProject(project.projectId!);
+      // await uncollectProject(project.projectId);
       // project.collectCount = Math.max((project.collectCount || 0) - 1, 0);
       // project.userCollected = false;
       // ElMessage.success('取消收藏');
@@ -518,7 +473,7 @@ onMounted(() => {
   .filter-tag {
     cursor: pointer;
     transition: all 0.3s ease;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -564,7 +519,7 @@ onMounted(() => {
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent);
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -679,15 +634,15 @@ onMounted(() => {
       span: 24 !important;
     }
   }
-  
+
   .page-header .page-title {
     font-size: 2rem;
   }
-  
+
   .filter-row {
     .el-col {
       margin-bottom: 10px;
     }
   }
 }
-</style> 
+</style>

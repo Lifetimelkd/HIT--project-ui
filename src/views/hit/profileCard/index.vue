@@ -65,12 +65,7 @@
           <div class="custom-form">
             <div class="form-item">
               <label class="form-label">主题色</label>
-              <el-color-picker
-                v-model="customOptions.primaryColor"
-                @change="updatePreview"
-                :predefine="predefineColors"
-                size="small"
-              />
+              <el-color-picker v-model="customOptions.primaryColor" @change="updatePreview" :predefine="predefineColors" size="small" />
             </div>
 
             <div class="form-item">
@@ -84,40 +79,22 @@
 
             <div class="form-item">
               <label class="form-label">字体大小</label>
-              <el-slider
-                v-model="customOptions.fontSize"
-                :min="12"
-                :max="20"
-                @change="updatePreview"
-                size="small"
-              />
+              <el-slider v-model="customOptions.fontSize" :min="12" :max="20" @change="updatePreview" size="small" />
             </div>
 
             <div class="form-item">
               <label class="form-label">显示头像</label>
-              <el-switch
-                v-model="customOptions.showAvatar"
-                @change="updatePreview"
-                size="small"
-              />
+              <el-switch v-model="customOptions.showAvatar" @change="updatePreview" size="small" />
             </div>
 
             <div class="form-item">
               <label class="form-label">显示二维码</label>
-              <el-switch
-                v-model="customOptions.showQRCode"
-                @change="updatePreview"
-                size="small"
-              />
+              <el-switch v-model="customOptions.showQRCode" @change="updatePreview" size="small" />
             </div>
 
             <div class="form-item">
               <label class="form-label">显示技能</label>
-              <el-switch
-                v-model="customOptions.showSkills"
-                @change="updatePreview"
-                size="small"
-              />
+              <el-switch v-model="customOptions.showSkills" @change="updatePreview" size="small" />
             </div>
           </div>
         </el-card>
@@ -205,7 +182,14 @@
                 <div class="card-body">
                   <div class="left-section">
                     <div v-if="customOptions.showAvatar" class="avatar-section">
-                      <img v-if="shouldShowAvatarImage" :src="finalAvatarUrl" class="avatar" @error="handleAvatarError" @load="handleAvatarLoad" alt="用户头像" />
+                      <img
+                        v-if="shouldShowAvatarImage"
+                        :src="finalAvatarUrl"
+                        class="avatar"
+                        @error="handleAvatarError"
+                        @load="handleAvatarLoad"
+                        alt="用户头像"
+                      />
                       <div v-else-if="shouldShowAvatarPlaceholder" class="avatar-placeholder">{{ getUserInitial }}</div>
                     </div>
                     <div class="info-section">
@@ -251,7 +235,14 @@
                 <div class="card-header">
                   <div class="header-left">
                     <div v-if="customOptions.showAvatar" class="avatar-section">
-                      <img v-if="shouldShowAvatarImage" :src="finalAvatarUrl" class="avatar" @error="handleAvatarError" @load="handleAvatarLoad" alt="用户头像" />
+                      <img
+                        v-if="shouldShowAvatarImage"
+                        :src="finalAvatarUrl"
+                        class="avatar"
+                        @error="handleAvatarError"
+                        @load="handleAvatarLoad"
+                        alt="用户头像"
+                      />
                       <div v-else-if="shouldShowAvatarPlaceholder" class="avatar-placeholder">{{ getUserInitial }}</div>
                     </div>
                   </div>
@@ -311,7 +302,14 @@
                 <div class="content-wrapper">
                   <div class="main-content">
                     <div v-if="customOptions.showAvatar" class="avatar-section">
-                      <img v-if="shouldShowAvatarImage" :src="finalAvatarUrl" class="avatar" @error="handleAvatarError" @load="handleAvatarLoad" alt="用户头像" />
+                      <img
+                        v-if="shouldShowAvatarImage"
+                        :src="finalAvatarUrl"
+                        class="avatar"
+                        @error="handleAvatarError"
+                        @load="handleAvatarLoad"
+                        alt="用户头像"
+                      />
                       <div v-else-if="shouldShowAvatarPlaceholder" class="avatar-placeholder">{{ getUserInitial }}</div>
                     </div>
                     <div class="text-content">
@@ -387,30 +385,47 @@
 </template>
 
 <script setup lang="ts" name="ProfileCard">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ElMessage } from 'element-plus';
 import {
-  Postcard, Brush, Setting, DataAnalysis, View, Share, Download, Refresh, RefreshLeft,
-  Message, Phone, Link, MapLocation, Goods, Picture
-} from '@element-plus/icons-vue'
-import html2canvas from 'html2canvas'
-import { getCurrentUserProfile, getUserSkills, getShareStats, type UserProfileInfo, type UserSkillInfo, type ShareStatsInfo } from '@/api/hit/userProfile'
+  Postcard,
+  Brush,
+  Setting,
+  DataAnalysis,
+  View,
+  Share,
+  Download,
+  Refresh,
+  RefreshLeft,
+  Message,
+  Phone,
+  Link,
+  MapLocation,
+  Goods,
+  Picture
+} from '@element-plus/icons-vue';
+import html2canvas from 'html2canvas';
+import {
+  getCurrentUserProfile,
+  getUserSkills,
+  getShareStats,
+  type UserProfileInfo,
+  type UserSkillInfo,
+  type ShareStatsInfo
+} from '@/api/hit/userProfile';
 // 导入默认头像
-import defaultAvatar from '@/assets/logo/鼠鼠.png'
+import defaultAvatar from '@/assets/logo/鼠鼠.png';
 
 // 响应式数据
-const selectedTemplate = ref('template1')
-const shareDialogVisible = ref(false)
-const shareUrl = ref('')
-const businessCardRef = ref()
-const loading = ref(false)
-const avatarError = ref(false)
+const selectedTemplate = ref('template1');
+const shareDialogVisible = ref(false);
+const shareUrl = ref('');
+const businessCardRef = ref();
+const loading = ref(false);
+const avatarError = ref(false);
 
 // 预定义颜色
-const predefineColors = [
-  '#005BAC', '#0077C8', '#67C23A', '#E6A23C', '#F56C6C',
-  '#909399', '#409EFF', '#36CFC9', '#9254DE', '#FF85C0'
-]
+const predefineColors = ['#005BAC', '#0077C8', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#409EFF', '#36CFC9', '#9254DE', '#FF85C0'];
 
 // 自定义选项
 const customOptions = reactive({
@@ -420,7 +435,7 @@ const customOptions = reactive({
   showAvatar: true,
   showQRCode: true,
   showSkills: true
-})
+});
 
 // 用户信息（从后端获取）
 const userInfo = reactive<UserProfileInfo>({
@@ -432,13 +447,13 @@ const userInfo = reactive<UserProfileInfo>({
   phone: '',
   github: '',
   personalIntro: ''
-})
+});
 
 // 默认头像URL（可以是一个通用的头像图片）
-const defaultAvatarUrl = defaultAvatar
+const defaultAvatarUrl = defaultAvatar;
 
 // 顶级技能
-const topSkills = ref<string[]>([])
+const topSkills = ref<string[]>([]);
 
 // 模板配置
 const templates = [
@@ -460,25 +475,25 @@ const templates = [
     description: '时尚前卫，展现个性特色',
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
   }
-]
+];
 
 // 分享统计
 const shareStats = reactive<ShareStatsInfo>({
   viewCount: 0,
   shareCount: 0,
   downloadCount: 0
-})
+});
 
 // 获取用户档案数据
 const fetchUserProfile = async () => {
   try {
-    loading.value = true
-    const response = await getCurrentUserProfile()
+    loading.value = true;
+    const response = await getCurrentUserProfile();
     if (response.data) {
       // 更新用户信息
-      Object.assign(userInfo, response.data)
+      Object.assign(userInfo, response.data);
       // 重置头像错误状态
-      avatarError.value = false
+      avatarError.value = false;
     } else {
       // 如果没有档案数据，显示默认值
       Object.assign(userInfo, {
@@ -488,12 +503,12 @@ const fetchUserProfile = async () => {
         email: '请添加邮箱',
         phone: '请添加手机号',
         personalIntro: '请添加个人简介'
-      })
-      ElMessage.info('检测到您还未完善个人档案，请先完善基本信息')
+      });
+      ElMessage.info('检测到您还未完善个人档案，请先完善基本信息');
     }
   } catch (error) {
-    console.error('获取用户档案失败:', error)
-    ElMessage.error('获取用户档案失败，请重试')
+    console.error('获取用户档案失败:', error);
+    ElMessage.error('获取用户档案失败，请重试');
     // 显示默认数据
     Object.assign(userInfo, {
       realName: '加载失败',
@@ -502,135 +517,133 @@ const fetchUserProfile = async () => {
       email: '数据获取中...',
       phone: '数据获取中...',
       personalIntro: '数据获取中...'
-    })
+    });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 获取用户技能数据
 const fetchUserSkills = async () => {
   try {
-    const response = await getUserSkills()
+    const response = await getUserSkills();
     if (response.data && Array.isArray(response.data)) {
-      topSkills.value = response.data.map((skill: UserSkillInfo) => skill.skillName)
+      topSkills.value = response.data.map((skill: UserSkillInfo) => skill.skillName);
     }
   } catch (error) {
-    console.error('获取用户技能失败:', error)
+    console.error('获取用户技能失败:', error);
     // 使用默认技能数据
-    topSkills.value = ['Python', 'Vue.js', '机器学习', '数据分析', '团队协作']
+    topSkills.value = ['Python', 'Vue.js', '机器学习', '数据分析', '团队协作'];
   }
-}
+};
 
 // 获取分享统计数据
 const fetchShareStats = async () => {
   try {
-    const response = await getShareStats()
+    const response = await getShareStats();
     if (response.data) {
-      Object.assign(shareStats, response.data)
+      Object.assign(shareStats, response.data);
     }
   } catch (error) {
-    console.error('获取分享统计失败:', error)
+    console.error('获取分享统计失败:', error);
     // 使用默认统计数据
     Object.assign(shareStats, {
       viewCount: 0,
       shareCount: 0,
       downloadCount: 0
-    })
+    });
   }
-}
+};
 
 // 头像加载错误处理
 const handleAvatarError = () => {
-  avatarError.value = true
-  console.warn('头像加载失败:', userInfo.avatarUrl)
-}
+  avatarError.value = true;
+  console.warn('头像加载失败:', userInfo.avatarUrl);
+};
 
 // 头像加载成功处理
 const handleAvatarLoad = () => {
-  avatarError.value = false
-}
+  avatarError.value = false;
+};
 
 // 检查头像URL是否有效
 const isValidAvatarUrl = computed(() => {
-  return userInfo.avatarUrl && 
-         userInfo.avatarUrl.trim() !== '' && 
-         !avatarError.value &&
-         (userInfo.avatarUrl.startsWith('http://') || 
-          userInfo.avatarUrl.startsWith('https://') || 
-          userInfo.avatarUrl.startsWith('/') ||
-          userInfo.avatarUrl.startsWith('data:image/'))
-})
+  return (
+    userInfo.avatarUrl &&
+    userInfo.avatarUrl.trim() !== '' &&
+    !avatarError.value &&
+    (userInfo.avatarUrl.startsWith('http://') ||
+      userInfo.avatarUrl.startsWith('https://') ||
+      userInfo.avatarUrl.startsWith('/') ||
+      userInfo.avatarUrl.startsWith('data:image/'))
+  );
+});
 
 // 获取最终显示的头像URL
 const finalAvatarUrl = computed(() => {
   if (isValidAvatarUrl.value) {
-    return userInfo.avatarUrl
+    return userInfo.avatarUrl;
   }
-  return defaultAvatarUrl
-})
+  return defaultAvatarUrl;
+});
 
 // 是否显示头像图片（而不是占位符）
 const shouldShowAvatarImage = computed(() => {
-  return customOptions.showAvatar && (isValidAvatarUrl.value || defaultAvatarUrl)
-})
+  return customOptions.showAvatar && (isValidAvatarUrl.value || defaultAvatarUrl);
+});
 
 // 是否应该显示头像占位符（姓名首字母）
 const shouldShowAvatarPlaceholder = computed(() => {
-  return customOptions.showAvatar && !shouldShowAvatarImage.value
-})
+  return customOptions.showAvatar && !shouldShowAvatarImage.value;
+});
 
 // 计算属性
 const cardBackgroundStyle = computed(() => {
-  const color = customOptions.primaryColor
+  const color = customOptions.primaryColor;
   if (customOptions.backgroundStyle === 'gradient') {
-    return `background: linear-gradient(135deg, ${color}, ${color}88)`
+    return `background: linear-gradient(135deg, ${color}, ${color}88)`;
   } else if (customOptions.backgroundStyle === 'solid') {
-    return `background: ${color}`
+    return `background: ${color}`;
   } else {
-    return `background: repeating-linear-gradient(45deg, ${color}22, ${color}22 10px, transparent 10px, transparent 20px)`
+    return `background: repeating-linear-gradient(45deg, ${color}22, ${color}22 10px, transparent 10px, transparent 20px)`;
   }
-})
+});
 
 const nameStyle = computed(() => ({
   fontSize: `${customOptions.fontSize + 4}px`,
   color: '#333'
-}))
+}));
 
 const titleStyle = computed(() => ({
   fontSize: `${customOptions.fontSize}px`,
   color: '#666'
-}))
+}));
 
 // 获取用户姓名首字母
 const getUserInitial = computed(() => {
-  const name = userInfo.realName || 'U'
-  return name.charAt(0).toUpperCase()
-})
+  const name = userInfo.realName || 'U';
+  return name.charAt(0).toUpperCase();
+});
 
 // 方法
 const selectTemplate = (templateId: string) => {
-  selectedTemplate.value = templateId
-  updatePreview()
-}
+  selectedTemplate.value = templateId;
+  updatePreview();
+};
 
 const updatePreview = () => {
   // 更新预览（这里可以添加实时预览逻辑）
-  console.log('更新预览')
+  console.log('更新预览');
   // 触发统计更新
-  shareStats.viewCount++
-}
+  shareStats.viewCount++;
+};
 
 const refreshPreview = async () => {
-  ElMessage.info('正在刷新数据...')
-  await Promise.all([
-    fetchUserProfile(),
-    fetchUserSkills(),
-    fetchShareStats()
-  ])
-  updatePreview()
-  ElMessage.success('预览已刷新')
-}
+  ElMessage.info('正在刷新数据...');
+  await Promise.all([fetchUserProfile(), fetchUserSkills(), fetchShareStats()]);
+  updatePreview();
+  ElMessage.success('预览已刷新');
+};
 
 const resetToDefault = () => {
   Object.assign(customOptions, {
@@ -640,26 +653,26 @@ const resetToDefault = () => {
     showAvatar: true,
     showQRCode: true,
     showSkills: true
-  })
-  selectedTemplate.value = 'template1'
-  updatePreview()
-  ElMessage.success('已重置为默认设置')
-}
+  });
+  selectedTemplate.value = 'template1';
+  updatePreview();
+  ElMessage.success('已重置为默认设置');
+};
 
 const handleShare = () => {
-  shareUrl.value = `${window.location.origin}/profile/card/view?id=${Date.now()}`
-  shareDialogVisible.value = true
-  shareStats.viewCount++
-}
+  shareUrl.value = `${window.location.origin}/profile/card/view?id=${Date.now()}`;
+  shareDialogVisible.value = true;
+  shareStats.viewCount++;
+};
 
 const handleDownload = async () => {
   try {
     if (!businessCardRef.value) {
-      ElMessage.error('名片预览区域未找到')
-      return
+      ElMessage.error('名片预览区域未找到');
+      return;
     }
 
-    ElMessage.info('正在生成名片图片，请稍候...')
+    ElMessage.info('正在生成名片图片，请稍候...');
 
     const canvas = await html2canvas(businessCardRef.value, {
       backgroundColor: '#ffffff',
@@ -669,57 +682,60 @@ const handleDownload = async () => {
       logging: false,
       height: businessCardRef.value.offsetHeight,
       width: businessCardRef.value.offsetWidth
-    })
+    });
 
     // 创建下载链接
-    const link = document.createElement('a')
-    link.download = `${userInfo.realName || '我的名片'}_名片.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+    const link = document.createElement('a');
+    link.download = `${userInfo.realName || '我的名片'}_名片.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 
     // 更新下载统计
-    shareStats.downloadCount++
-    ElMessage.success('名片下载成功')
+    shareStats.downloadCount++;
+    ElMessage.success('名片下载成功');
   } catch (error) {
-    console.error('下载失败:', error)
-    ElMessage.error('下载失败，请重试')
+    console.error('下载失败:', error);
+    ElMessage.error('下载失败，请重试');
   }
-}
+};
 
 const handleCopyLink = () => {
-  shareUrl.value = `${window.location.origin}/profile/card/view?id=${Date.now()}`
-  copyToClipboard(shareUrl.value)
-}
+  shareUrl.value = `${window.location.origin}/profile/card/view?id=${Date.now()}`;
+  copyToClipboard(shareUrl.value);
+};
 
 const handleGenerateQR = () => {
-  ElMessage.info('二维码生成功能开发中...')
-}
+  ElMessage.info('二维码生成功能开发中...');
+};
 
 const handleSaveImage = () => {
-  handleDownload()
-  shareDialogVisible.value = false
-}
+  handleDownload();
+  shareDialogVisible.value = false;
+};
 
 const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text).then(() => {
-    ElMessage.success('链接已复制到剪贴板')
-    shareStats.shareCount++
-  }).catch(() => {
-    // 降级方案
-    const textArea = document.createElement('textarea')
-    textArea.value = text
-    document.body.appendChild(textArea)
-    textArea.select()
-    try {
-      document.execCommand('copy')
-      ElMessage.success('链接已复制到剪贴板')
-      shareStats.shareCount++
-    } catch (err) {
-      ElMessage.error('复制失败，请手动复制')
-    }
-    document.body.removeChild(textArea)
-  })
-}
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      ElMessage.success('链接已复制到剪贴板');
+      shareStats.shareCount++;
+    })
+    .catch(() => {
+      // 降级方案
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        ElMessage.success('链接已复制到剪贴板');
+        shareStats.shareCount++;
+      } catch (err) {
+        ElMessage.error('复制失败，请手动复制');
+      }
+      document.body.removeChild(textArea);
+    });
+};
 
 const showDebugInfo = () => {
   const debugInfo = {
@@ -737,10 +753,10 @@ const showDebugInfo = () => {
     分享统计: shareStats,
     自定义选项: customOptions,
     当前模板: selectedTemplate.value
-  }
-  console.log('当前数据状态:', debugInfo)
-  ElMessage.info('数据状态已输出到控制台，请按F12查看')
-}
+  };
+  console.log('当前数据状态:', debugInfo);
+  ElMessage.info('数据状态已输出到控制台，请按F12查看');
+};
 
 const getSkillBubbleStyle = (index: number) => {
   const positions = [
@@ -749,41 +765,49 @@ const getSkillBubbleStyle = (index: number) => {
     { top: '60%', left: '15%' },
     { top: '80%', left: '60%' },
     { top: '50%', left: '45%' }
-  ]
-  const colors = ['#67C23A', '#E6A23C', '#F56C6C', '#409EFF', '#909399']
-  
+  ];
+  const colors = ['#67C23A', '#E6A23C', '#F56C6C', '#409EFF', '#909399'];
+
   return {
     position: 'absolute' as const,
     top: positions[index]?.top || '50%',
     left: positions[index]?.left || '50%',
     backgroundColor: colors[index % colors.length],
     transform: 'translate(-50%, -50%)'
-  }
-}
+  };
+};
 
 // 监听自定义选项变化
-watch(() => customOptions.primaryColor, () => {
-  updatePreview()
-}, { immediate: false })
+watch(
+  () => customOptions.primaryColor,
+  () => {
+    updatePreview();
+  },
+  { immediate: false }
+);
 
-watch(() => customOptions.backgroundStyle, () => {
-  updatePreview()
-}, { immediate: false })
+watch(
+  () => customOptions.backgroundStyle,
+  () => {
+    updatePreview();
+  },
+  { immediate: false }
+);
 
-watch(() => customOptions.fontSize, () => {
-  updatePreview()
-}, { immediate: false })
+watch(
+  () => customOptions.fontSize,
+  () => {
+    updatePreview();
+  },
+  { immediate: false }
+);
 
 // 生命周期
 onMounted(async () => {
   // 并行加载所有数据
-  await Promise.all([
-    fetchUserProfile(),
-    fetchUserSkills(),
-    fetchShareStats()
-  ])
-  updatePreview()
-})
+  await Promise.all([fetchUserProfile(), fetchUserSkills(), fetchShareStats()]);
+  updatePreview();
+});
 </script>
 
 <style scoped lang="scss">
@@ -809,7 +833,7 @@ onMounted(async () => {
 
       .title-icon {
         margin-right: 12px;
-        color: #005BAC;
+        color: #005bac;
       }
     }
 
@@ -842,12 +866,12 @@ onMounted(async () => {
             transition: all 0.3s;
 
             &:hover {
-              border-color: #005BAC;
+              border-color: #005bac;
               box-shadow: 0 2px 8px rgba(0, 91, 172, 0.2);
             }
 
             &.active {
-              border-color: #005BAC;
+              border-color: #005bac;
               background-color: rgba(0, 91, 172, 0.05);
             }
 
@@ -961,7 +985,7 @@ onMounted(async () => {
               margin-right: 12px;
 
               .el-icon {
-                color: #005BAC;
+                color: #005bac;
                 font-size: 18px;
               }
             }
@@ -1010,11 +1034,11 @@ onMounted(async () => {
 
       .preview-card {
         transition: all 0.3s ease;
-        
+
         &:hover {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .preview-container {
           .business-card {
             width: 600px;
@@ -1193,7 +1217,8 @@ onMounted(async () => {
                   backdrop-filter: blur(10px);
 
                   .avatar-section {
-                    .avatar, .avatar-placeholder {
+                    .avatar,
+                    .avatar-placeholder {
                       width: 60px;
                       height: 60px;
                       border-radius: 50%;
@@ -1201,19 +1226,19 @@ onMounted(async () => {
 
                     .avatar {
                       object-fit: cover;
-                      border: 2px solid #005BAC;
+                      border: 2px solid #005bac;
                       transition: all 0.3s ease;
                     }
 
                     .avatar-placeholder {
-                      background: #005BAC;
+                      background: #005bac;
                       color: white;
                       display: flex;
                       align-items: center;
                       justify-content: center;
                       font-size: 24px;
                       font-weight: 600;
-                      border: 2px solid #005BAC;
+                      border: 2px solid #005bac;
                       transition: all 0.3s ease;
                     }
                   }
@@ -1224,7 +1249,8 @@ onMounted(async () => {
                       color: #333;
                     }
 
-                    .title, .subtitle {
+                    .title,
+                    .subtitle {
                       margin: 0 0 2px 0;
                       color: #666;
                       font-size: 14px;
@@ -1249,7 +1275,7 @@ onMounted(async () => {
                       color: #666;
 
                       .el-icon {
-                        color: #005BAC;
+                        color: #005bac;
                       }
                     }
                   }
@@ -1284,7 +1310,7 @@ onMounted(async () => {
 
                           .skill-progress {
                             height: 100%;
-                            background: #005BAC;
+                            background: #005bac;
                             border-radius: 2px;
                           }
                         }
@@ -1311,7 +1337,7 @@ onMounted(async () => {
 
                     .el-icon {
                       font-size: 20px;
-                      color: #005BAC;
+                      color: #005bac;
                     }
                   }
 
@@ -1383,7 +1409,8 @@ onMounted(async () => {
                     gap: 20px;
 
                     .avatar-section {
-                      .avatar, .avatar-placeholder {
+                      .avatar,
+                      .avatar-placeholder {
                         width: 100px;
                         height: 100px;
                         border-radius: 20px;
@@ -1396,7 +1423,7 @@ onMounted(async () => {
                       }
 
                       .avatar-placeholder {
-                        background: linear-gradient(135deg, #005BAC, #0077C8);
+                        background: linear-gradient(135deg, #005bac, #0077c8);
                         color: white;
                         display: flex;
                         align-items: center;
@@ -1418,7 +1445,7 @@ onMounted(async () => {
 
                       .title {
                         margin: 0 0 4px 0;
-                        color: #005BAC;
+                        color: #005bac;
                       }
 
                       .subtitle {
@@ -1469,7 +1496,7 @@ onMounted(async () => {
 
                         .el-icon {
                           font-size: 24px;
-                          color: #005BAC;
+                          color: #005bac;
                         }
                       }
                     }
@@ -1492,7 +1519,7 @@ onMounted(async () => {
 
       .el-icon {
         margin-right: 8px;
-        color: #005BAC;
+        color: #005bac;
       }
     }
   }
@@ -1522,7 +1549,7 @@ onMounted(async () => {
         margin-right: 16px;
 
         .el-icon {
-          color: #005BAC;
+          color: #005bac;
           font-size: 18px;
         }
       }
@@ -1546,4 +1573,4 @@ onMounted(async () => {
     margin-top: 20px;
   }
 }
-</style> 
+</style>

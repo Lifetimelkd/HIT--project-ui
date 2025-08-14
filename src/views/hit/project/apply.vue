@@ -46,16 +46,12 @@
     <div class="application-form">
       <el-card class="form-card">
         <template #header>
-          <h3><el-icon><Edit /></el-icon> 申请信息</h3>
+          <h3>
+            <el-icon><Edit /></el-icon> 申请信息
+          </h3>
         </template>
-        
-        <el-form
-          ref="formRef"
-          :model="applicationForm"
-          :rules="formRules"
-          label-width="120px"
-          size="large"
-        >
+
+        <el-form ref="formRef" :model="applicationForm" :rules="formRules" label-width="120px" size="large">
           <el-form-item label="申请理由" prop="applicationReason">
             <el-input
               v-model="applicationForm.applicationReason"
@@ -101,19 +97,11 @@
           </el-form-item>
 
           <el-form-item label="可投入时间" prop="availableTime">
-            <el-input
-              v-model="applicationForm.availableTime"
-              placeholder="如：每周20小时，周末全天等"
-              maxlength="100"
-            />
+            <el-input v-model="applicationForm.availableTime" placeholder="如：每周20小时，周末全天等" maxlength="100" />
           </el-form-item>
 
           <el-form-item label="联系方式" prop="contactInfo">
-            <el-input
-              v-model="applicationForm.contactInfo"
-              placeholder="请提供QQ、微信、邮箱等联系方式"
-              maxlength="200"
-            />
+            <el-input v-model="applicationForm.contactInfo" placeholder="请提供QQ、微信、邮箱等联系方式" maxlength="200" />
           </el-form-item>
 
           <el-form-item label="简历附件">
@@ -139,18 +127,12 @@
           </el-form-item>
 
           <el-form-item label="作品集地址">
-            <el-input
-              v-model="applicationForm.portfolioUrl"
-              placeholder="请提供GitHub、个人网站等作品展示地址（可选）"
-              maxlength="500"
-            />
+            <el-input v-model="applicationForm.portfolioUrl" placeholder="请提供GitHub、个人网站等作品展示地址（可选）" maxlength="500" />
           </el-form-item>
 
           <div class="form-actions">
             <el-button size="large" @click="handleCancel">取消申请</el-button>
-            <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
-              提交申请
-            </el-button>
+            <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting"> 提交申请 </el-button>
           </div>
         </el-form>
       </el-card>
@@ -210,12 +192,8 @@ const formRules = {
     { required: true, message: '请填写预期贡献', trigger: 'blur' },
     { min: 10, max: 300, message: '预期贡献长度在 10 到 300 个字符', trigger: 'blur' }
   ],
-  availableTime: [
-    { required: true, message: '请填写可投入时间', trigger: 'blur' }
-  ],
-  contactInfo: [
-    { required: true, message: '请填写联系方式', trigger: 'blur' }
-  ]
+  availableTime: [{ required: true, message: '请填写可投入时间', trigger: 'blur' }],
+  contactInfo: [{ required: true, message: '请填写联系方式', trigger: 'blur' }]
 };
 
 // 获取项目信息
@@ -224,7 +202,7 @@ const getProjectInfo = async () => {
   try {
     const response = await getPublicProject(projectId);
     projectInfo.value = response.data;
-    
+
     // 检查项目是否可申请
     if (projectInfo.value?.recruitmentStatus !== 'open') {
       ElMessage.warning('该项目暂不接受申请');
@@ -252,7 +230,9 @@ const handleResumeSuccess = (response: any) => {
 
 // 简历上传前验证
 const beforeResumeUpload = (file: File) => {
-  const isValidType = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type);
+  const isValidType = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(
+    file.type
+  );
   const isLt10M = file.size / 1024 / 1024 < 10;
 
   if (!isValidType) {
@@ -263,7 +243,7 @@ const beforeResumeUpload = (file: File) => {
     ElMessage.error('文件大小不能超过 10MB!');
     return false;
   }
-  
+
   resumeUploading.value = true;
   return true;
 };
@@ -272,7 +252,7 @@ const beforeResumeUpload = (file: File) => {
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate();
-    
+
     await ElMessageBox.confirm('确定要提交申请吗？提交后将等待项目负责人审核。', '确认提交', {
       confirmButtonText: '确定提交',
       cancelButtonText: '再检查一下',
@@ -280,9 +260,9 @@ const handleSubmit = async () => {
     });
 
     submitting.value = true;
-    
+
     await applyToProject(applicationForm);
-    
+
     ElMessage.success('申请提交成功！请等待项目负责人审核。');
     router.push(`/hit/project/detail/${projectId}`);
   } catch (error: any) {
@@ -370,7 +350,7 @@ onMounted(() => {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.3);
     }
@@ -524,20 +504,20 @@ onMounted(() => {
 @media (max-width: 768px) {
   .project-info {
     flex-direction: column;
-    
+
     .project-cover {
       align-self: center;
     }
   }
-  
+
   .project-meta {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 10px !important;
   }
-  
+
   .page-header .page-title {
     font-size: 2rem;
   }
 }
-</style> 
+</style>

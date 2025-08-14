@@ -56,12 +56,7 @@
           <div class="card-header">
             <span class="card-title">团队成员 ({{ memberList.length }})</span>
             <div class="card-actions">
-              <el-input
-                v-model="searchKeyword"
-                placeholder="搜索成员"
-                style="width: 200px"
-                clearable
-              >
+              <el-input v-model="searchKeyword" placeholder="搜索成员" style="width: 200px" clearable>
                 <template #prefix>
                   <el-icon><Search /></el-icon>
                 </template>
@@ -94,17 +89,10 @@
           <el-table-column prop="department" label="部门/专业" width="150" />
           <el-table-column prop="skills" label="技能标签" min-width="200">
             <template #default="{ row }">
-              <el-tag
-                v-for="skill in (row.skills || '').split(',').slice(0, 3)"
-                :key="skill"
-                size="small"
-                style="margin-right: 5px"
-              >
+              <el-tag v-for="skill in (row.skills || '').split(',').slice(0, 3)" :key="skill" size="small" style="margin-right: 5px">
                 {{ skill }}
               </el-tag>
-              <span v-if="(row.skills || '').split(',').length > 3" class="more-skills">
-                +{{ (row.skills || '').split(',').length - 3 }}
-              </span>
+              <span v-if="(row.skills || '').split(',').length > 3" class="more-skills"> +{{ (row.skills || '').split(',').length - 3 }} </span>
             </template>
           </el-table-column>
           <el-table-column prop="joinTime" label="加入时间" width="120">
@@ -122,10 +110,11 @@
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
-                <el-button type="primary" size="small" @click="handleViewProfile(row.memberId)">
-                  查看
-                </el-button>
-                <el-dropdown @command="(command) => handleMemberAction(command, row)" v-if="row.role !== 'creator'">
+                <el-button type="primary" size="small" @click="handleViewProfile(row.memberId)"> 查看 </el-button>
+                <el-dropdown
+                  @command="(command) => handleMemberAction(command, row)"
+                  v-if="row.role !== 'creator' && row.role !== '项目负责人' && row.isLeader !== '1'"
+                >
                   <el-button type="info" size="small">
                     更多<el-icon><ArrowDown /></el-icon>
                   </el-button>
@@ -153,59 +142,100 @@
             <el-radio value="search">搜索用户</el-radio>
           </el-radio-group>
         </el-form-item>
-        
+
         <el-form-item label="邮箱地址" prop="email" v-if="inviteForm.inviteType === 'email'">
           <el-input v-model="inviteForm.email" placeholder="请输入被邀请人的邮箱地址" />
         </el-form-item>
-        
+
         <el-form-item label="搜索用户" v-if="inviteForm.inviteType === 'search'">
-          <el-select
-            v-model="inviteForm.userId"
-            placeholder="请搜索并选择用户"
-            filterable
-            remote
-            :remote-method="handleSearchUsers"
-            :loading="searchLoading"
-            style="width: 100%"
+          <el-input
+            v-model="selectedUserDisplay"
+            placeholder="点击选择用户"
+            readonly
+            @click="handleOpenUserSelector"
+            style="width: 100%; cursor: pointer"
           >
-            <el-option
-              v-for="user in searchUserList"
-              :key="user.userId"
-              :label="user.userName"
-              :value="user.userId"
-            >
-              <div class="user-option">
-                <el-avatar :size="20" :src="user.avatar">{{ user.userName.charAt(0) }}</el-avatar>
-                <span style="margin-left: 10px">{{ user.userName }}</span>
-                <span style="margin-left: 10px; color: #999; font-size: 12px">{{ user.email }}</span>
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+            <template #suffix>
+              <el-icon><ArrowDown /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="inviteForm.role" placeholder="请选择角色" :loading="rolesLoading">
+            <el-option v-for="role in availableRoles" :key="role.roleId" :label="role.roleName" :value="role.roleName">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span>{{ role.roleName }}</span>
+                <span style="font-size: 12px; color: #999"> {{ role.currentCount }}/{{ role.requiredCount }} </span>
               </div>
             </el-option>
+            <!-- 保留一些通用角色作为备选 -->
+            <el-option v-if="availableRoles.length === 0" label="普通成员" value="普通成员" />
           </el-select>
         </el-form-item>
-        
-        <el-form-item label="角色" prop="role">
-          <el-select v-model="inviteForm.role" placeholder="请选择角色">
-            <el-option label="核心成员" value="core" />
-            <el-option label="普通成员" value="member" />
-            <el-option label="观察者" value="observer" />
-          </el-select>
-        </el-form-item>
-        
+
         <el-form-item label="邀请消息">
-          <el-input
-            v-model="inviteForm.message"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入邀请消息（可选）"
-          />
+          <el-input v-model="inviteForm.message" type="textarea" :rows="3" placeholder="请输入邀请消息（可选）" />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="inviteDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSendInvite" :loading="inviteLoading">
-          发送邀请
-        </el-button>
+        <el-button type="primary" @click="handleSendInvite" :loading="inviteLoading"> 发送邀请 </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 用户选择对话框 -->
+    <el-dialog v-model="userSelectorVisible" title="选择用户" width="800px">
+      <div class="user-selector-header">
+        <el-input v-model="userSearchKeyword" placeholder="输入用户名、昵称或邮箱搜索" style="width: 300px" clearable @input="handleUserSearch">
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
+
+      <el-table
+        ref="userTableRef"
+        v-loading="userTableLoading"
+        :data="filteredUserList"
+        style="width: 100%; margin-top: 20px"
+        max-height="400px"
+        @row-click="handleUserRowClick"
+        highlight-current-row
+      >
+        <el-table-column type="selection" width="55" />
+        <el-table-column label="用户信息" min-width="200">
+          <template #default="{ row }">
+            <div class="user-info-cell">
+              <el-avatar :size="40" :src="row.avatar">
+                {{ row.nickName ? row.nickName.charAt(0) : row.userName.charAt(0) }}
+              </el-avatar>
+              <div class="user-details">
+                <div class="user-name">{{ row.nickName || row.userName }}</div>
+                <div class="user-username">@{{ row.userName }}</div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" width="200" />
+        <el-table-column prop="phonenumber" label="手机号" width="130" />
+        <el-table-column prop="deptName" label="部门" width="120" />
+        <el-table-column prop="status" label="状态" width="80">
+          <template #default="{ row }">
+            <el-tag :type="row.status === '0' ? 'success' : 'danger'" size="small">
+              {{ row.status === '0' ? '正常' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="userSelectorVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleConfirmSelectUser" :disabled="!selectedUser"> 确认选择 </el-button>
       </template>
     </el-dialog>
 
@@ -218,14 +248,28 @@
           </el-tag>
         </el-form-item>
         <el-form-item label="新角色">
-          <el-select v-model="roleForm.newRole" placeholder="请选择新角色">
-            <el-option label="核心成员" value="core" />
-            <el-option label="普通成员" value="member" />
-            <el-option label="观察者" value="observer" />
+          <el-select v-model="roleForm.newRole" placeholder="请选择新角色" :loading="rolesLoading">
+            <el-option
+              v-for="role in projectRoles"
+              :key="role.roleId"
+              :label="role.roleName"
+              :value="role.roleName"
+              :disabled="role.isLeader === '1'"
+            >
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span>{{ role.roleName }}</span>
+                <span style="font-size: 12px; color: #999">
+                  {{ role.currentCount }}/{{ role.requiredCount }}
+                  {{ role.isLeader === '1' ? ' (领导角色)' : '' }}
+                </span>
+              </div>
+            </el-option>
+            <!-- 保留一些通用角色作为备选 -->
+            <el-option v-if="projectRoles.length === 0" label="普通成员" value="普通成员" />
           </el-select>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="roleDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleChangeRole">确认变更</el-button>
@@ -240,8 +284,8 @@ import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 改为导入完整的API接口定义
-import { 
-  getProject, 
+import {
+  getProject,
   ProjectInfo,
   getProjectMemberList,
   inviteMemberToProject,
@@ -251,13 +295,22 @@ import {
   MemberInfo,
   InviteMemberForm,
   ChangeRoleForm,
-  UserSearchInfo
+  UserSearchInfo,
+  // 新增项目角色相关接口
+  getProjectRoles,
+  getAvailableProjectRoles,
+  ProjectRoleInfo,
+  updateProjectRoleCount
 } from '@/api/hit/project';
+
+// 添加系统用户相关接口导入
+import { listUser } from '@/api/system/user';
+import type { UserVO, UserQuery } from '@/api/system/user/types';
 
 // 路由相关
 const router = useRouter();
 const route = useRoute();
-const projectId = computed(() => Number(route.params.id));
+const projectId = computed(() => route.params.id as string); // 使用string类型而不是Number
 
 // 响应式数据
 const loading = ref(false);
@@ -271,12 +324,25 @@ const searchLoading = ref(false);
 const searchUserList = ref<any[]>([]);
 const currentMember = ref<any>(null);
 
+// 用户选择相关数据
+const userSelectorVisible = ref(false);
+const userTableLoading = ref(false);
+const userSearchKeyword = ref('');
+const userList = ref<UserVO[]>([]);
+const selectedUser = ref<UserVO | null>(null);
+const selectedUserDisplay = ref('');
+
+// 项目角色相关数据
+const projectRoles = ref<ProjectRoleInfo[]>([]);
+const availableRoles = ref<ProjectRoleInfo[]>([]);
+const rolesLoading = ref(false);
+
 // 表单数据
 const inviteForm = reactive({
   inviteType: 'email',
   email: '',
   userId: null,
-  role: 'member',
+  role: '普通成员', // 使用默认角色名称而不是英文代码
   message: ''
 });
 
@@ -290,17 +356,28 @@ const inviteRules = {
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email' as const, message: '请输入正确的邮箱地址', trigger: 'blur' }
   ],
-  role: [
-    { required: true, message: '请选择角色', trigger: 'change' }
-  ]
+  role: [{ required: true, message: '请选择角色', trigger: 'change' }]
 };
 
 // 计算属性
 const filteredMembers = computed(() => {
   if (!searchKeyword.value) return memberList.value;
-  return memberList.value.filter(member =>
-    member.memberName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchKeyword.value.toLowerCase())
+  return memberList.value.filter(
+    (member) =>
+      member.memberName?.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      member.userName?.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchKeyword.value.toLowerCase())
+  );
+});
+
+// 用户选择表格过滤
+const filteredUserList = computed(() => {
+  if (!userSearchKeyword.value) return userList.value;
+  return userList.value.filter(
+    (user) =>
+      user.userName?.toLowerCase().includes(userSearchKeyword.value.toLowerCase()) ||
+      user.nickName?.toLowerCase().includes(userSearchKeyword.value.toLowerCase()) ||
+      user.email?.toLowerCase().includes(userSearchKeyword.value.toLowerCase())
   );
 });
 
@@ -308,9 +385,18 @@ const filteredMembers = computed(() => {
 const getProjectInfo = async () => {
   try {
     const response = await getProject(projectId.value);
-    // 修复类型问题
+    // 修复类型问题，处理不同的响应结构
     const responseData = response as any;
-    projectInfo.value = responseData.data || responseData;
+    const projectData = responseData.data || responseData;
+
+    // 如果项目数据存在，设置一些默认值
+    if (projectData) {
+      projectInfo.value = {
+        ...projectData,
+        currentMembers: memberList.value.length, // 使用成员列表长度
+        coverImage: projectData.coverImage || '/default-project-cover.jpg'
+      };
+    }
   } catch (error) {
     console.error('获取项目信息失败:', error);
     ElMessage.error('获取项目信息失败');
@@ -323,7 +409,36 @@ const getMemberList = async () => {
   try {
     // 使用真实API调用替换模拟数据
     const response = await getProjectMemberList(projectId.value, 1, 100); // 添加分页参数，显示100个成员
-    memberList.value = response.data || [];
+
+    // 处理后端返回的数据结构
+    const responseData = response as any;
+    console.log('原始API响应:', responseData); // 调试日志
+
+    const rawMembers = responseData.rows || responseData.data || responseData || [];
+    console.log('提取的原始成员数据:', rawMembers); // 调试日志
+
+    // 映射后端字段到前端期望的字段
+    memberList.value = rawMembers.map((member: any) => ({
+      memberId: member.memberId,
+      memberName: member.userName || member.realName || '未知用户', // 添加memberName字段
+      userName: member.userName,
+      email: member.contactInfo || '未提供邮箱', // 使用contactInfo作为email
+      avatar: member.avatarUrl,
+      role: member.memberRole, // 将memberRole映射到role
+      memberRole: member.memberRole,
+      department: member.college || member.major || '未设置', // 合并college和major作为department
+      skills: member.major || '', // 使用major作为技能标签
+      joinTime: member.joinTime,
+      status: member.memberStatus, // 将memberStatus映射到status
+      isLeader: member.isLeader,
+      contributionScore: member.contributionScore,
+      completedTasks: member.completedTasks,
+      totalTasks: member.totalTasks,
+      // 保留原始数据以备后用
+      ...member
+    }));
+
+    console.log('处理后的成员列表:', memberList.value); // 调试日志
   } catch (error) {
     console.error('获取成员列表失败:', error);
     ElMessage.error('获取成员列表失败');
@@ -339,7 +454,7 @@ const handleSearchUsers = async (query: string) => {
     searchUserList.value = [];
     return;
   }
-  
+
   searchLoading.value = true;
   try {
     // 使用真实API调用替换模拟搜索
@@ -354,69 +469,143 @@ const handleSearchUsers = async (query: string) => {
   }
 };
 
+// 获取项目角色列表
+const getProjectRolesList = async () => {
+  rolesLoading.value = true;
+  try {
+    const response = await getProjectRoles(projectId.value);
+    console.log('项目角色列表:', response); // 调试日志
+
+    // 处理后端返回的数据结构
+    const responseData = response as any;
+    projectRoles.value = responseData.data || responseData || [];
+
+    console.log('处理后的项目角色列表:', projectRoles.value); // 调试日志
+  } catch (error) {
+    console.error('获取项目角色列表失败:', error);
+    ElMessage.error('获取项目角色列表失败');
+    projectRoles.value = [];
+  } finally {
+    rolesLoading.value = false;
+  }
+};
+
+// 获取可申请的项目角色列表
+const getAvailableRolesList = async () => {
+  try {
+    const response = await getAvailableProjectRoles(projectId.value);
+    console.log('可申请角色列表:', response); // 调试日志
+
+    // 处理后端返回的数据结构
+    const responseData = response as any;
+    availableRoles.value = responseData.data || responseData || [];
+
+    console.log('处理后的可申请角色列表:', availableRoles.value); // 调试日志
+  } catch (error) {
+    console.error('获取可申请角色列表失败:', error);
+    availableRoles.value = [];
+  }
+};
+
 // 事件处理
 const handleBack = () => {
   router.go(-1);
 };
 
-// 邀请成员
+// 用户选择相关方法
+const handleOpenUserSelector = async () => {
+  userSelectorVisible.value = true;
+  await loadUserList();
+};
+
+const loadUserList = async () => {
+  userTableLoading.value = true;
+  try {
+    const query: UserQuery = {
+      status: '0', // 只查询正常状态的用户
+      pageNum: 1,
+      pageSize: 100
+    };
+    const response = await listUser(query);
+    const responseData = response as any;
+    userList.value = responseData.rows || responseData.data || responseData || [];
+  } catch (error) {
+    console.error('获取用户列表失败:', error);
+    ElMessage.error('获取用户列表失败');
+    userList.value = [];
+  } finally {
+    userTableLoading.value = false;
+  }
+};
+
+const handleUserSearch = (value: string) => {
+  // 实时搜索已由计算属性 filteredUserList 处理
+};
+
+const handleUserRowClick = (row: UserVO) => {
+  selectedUser.value = row;
+};
+
+const handleConfirmSelectUser = () => {
+  if (selectedUser.value) {
+    inviteForm.userId = selectedUser.value.userId;
+    // 修复显示格式，去掉多余的括号
+    const displayName = selectedUser.value.nickName || selectedUser.value.userName;
+    const email = selectedUser.value.email || '未提供邮箱';
+    selectedUserDisplay.value = `${displayName} (${email})`;
+    userSelectorVisible.value = false;
+    // 重置选择状态
+    selectedUser.value = null;
+    userSearchKeyword.value = '';
+  }
+};
+
+// 邀请成员 - 打开对话框
 const handleInviteMember = async () => {
-  if (!inviteForm.userId || !inviteForm.role) {
-    ElMessage.error('请选择用户和角色');
+  // 刷新可用角色列表
+  await getAvailableRolesList();
+  inviteDialogVisible.value = true;
+};
+
+// 发送邀请
+const handleSendInvite = async () => {
+  // 验证表单
+  if (inviteForm.inviteType === 'email' && !inviteForm.email) {
+    ElMessage.error('请输入邮箱地址');
+    return;
+  }
+  if (inviteForm.inviteType === 'search' && !inviteForm.userId) {
+    ElMessage.error('请选择用户');
+    return;
+  }
+  if (!inviteForm.role) {
+    ElMessage.error('请选择角色');
     return;
   }
 
-  try {
-    // 使用真实API调用
-    await inviteMemberToProject({
-      projectId: projectId.value,
-      userId: inviteForm.userId,
-      memberRole: inviteForm.role
-    });
-    
-    ElMessage.success('邀请成功');
-    inviteDialogVisible.value = false;
-    resetInviteForm();
-    await getMemberList(); // 刷新成员列表
-  } catch (error) {
-    console.error('邀请成员失败:', error);
-    ElMessage.error('邀请成员失败');
-  }
-};
-
-// 重置邀请表单
-const resetInviteForm = () => {
-  inviteForm.inviteType = 'email';
-  inviteForm.email = '';
-  inviteForm.userId = null;
-  inviteForm.role = 'member';
-  inviteForm.message = '';
-};
-
-const handleSendInvite = async () => {
   inviteLoading.value = true;
   try {
-    // TODO: 等待后端实现邀请成员API后启用
-    // const inviteData = {
-    //   projectId: projectId.value,
-    //   ...inviteForm
-    // };
-    // await inviteMemberToProject(inviteData);
-    
-    // 临时模拟发送邀请，实际应该调用后端API
-    // 建议后端实现以下接口：
-    // POST /hit/project/{projectId}/invite - 邀请成员加入项目
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    ElMessage.success('邀请已发送');
-    inviteDialogVisible.value = false;
-    // 重置表单
-    Object.assign(inviteForm, {
-      inviteType: 'email',
-      email: '',
-      userId: null,
-      role: 'member',
-      message: ''
-    });
+    if (inviteForm.inviteType === 'search' && inviteForm.userId) {
+      // 直接邀请已存在的用户
+      await inviteMemberToProject({
+        projectId: projectId.value,
+        userId: inviteForm.userId,
+        memberRole: inviteForm.role
+      });
+
+      ElMessage.success('邀请成功');
+      inviteDialogVisible.value = false;
+      resetInviteForm();
+
+      // 刷新相关数据
+      await getMemberList(); // 刷新成员列表
+      await updateProjectRoleCount(projectId.value); // 更新角色统计
+      await getProjectRolesList(); // 刷新项目角色列表
+      await getAvailableRolesList(); // 刷新可申请角色列表
+    } else {
+      // TODO: 邮箱邀请功能需要后端支持
+      ElMessage.info('邮箱邀请功能开发中...');
+    }
   } catch (error) {
     console.error('发送邀请失败:', error);
     ElMessage.error('发送邀请失败');
@@ -425,17 +614,33 @@ const handleSendInvite = async () => {
   }
 };
 
+// 重置邀请表单
+const resetInviteForm = () => {
+  inviteForm.inviteType = 'email';
+  inviteForm.email = '';
+  inviteForm.userId = null;
+  // 使用第一个可用角色或默认值
+  inviteForm.role = availableRoles.value.length > 0 ? availableRoles.value[0].roleName : '普通成员';
+  inviteForm.message = '';
+  // 重置用户选择相关字段
+  selectedUserDisplay.value = '';
+  selectedUser.value = null;
+  userSearchKeyword.value = '';
+};
+
 const handleViewProfile = (memberId: number) => {
   // TODO: 等待后端实现用户资料页面后启用
   // router.push(`/hit/userProfile/${memberId}`);
   ElMessage.info('查看用户资料功能开发中...');
 };
 
-const handleMemberAction = (command: string, member: any) => {
+const handleMemberAction = async (command: string, member: any) => {
   currentMember.value = member;
-  
+
   switch (command) {
     case 'changeRole':
+      // 刷新项目角色列表
+      await getProjectRolesList();
       roleForm.newRole = member.role;
       roleDialogVisible.value = true;
       break;
@@ -461,10 +666,15 @@ const handleChangeRole = async () => {
     await changeProjectMemberRole(currentMember.value.memberId, {
       memberRole: roleForm.newRole
     });
-    
+
     ElMessage.success('角色变更成功');
     roleDialogVisible.value = false;
+
+    // 刷新相关数据
     await getMemberList(); // 刷新成员列表
+    await updateProjectRoleCount(projectId.value); // 更新角色统计
+    await getProjectRolesList(); // 刷新项目角色列表
+    await getAvailableRolesList(); // 刷新可申请角色列表
   } catch (error) {
     console.error('角色变更失败:', error);
     ElMessage.error('角色变更失败');
@@ -479,12 +689,17 @@ const handleRemoveMember = async (member: any) => {
       cancelButtonText: '取消',
       type: 'warning'
     });
-    
+
     // 使用真实API调用
     await removeProjectMember(member.memberId);
-    
+
     ElMessage.success('成员移除成功');
+
+    // 刷新相关数据
     await getMemberList(); // 刷新成员列表
+    await updateProjectRoleCount(projectId.value); // 更新角色统计
+    await getProjectRolesList(); // 刷新项目角色列表
+    await getAvailableRolesList(); // 刷新可申请角色列表
   } catch (error) {
     if (error !== 'cancel') {
       console.error('成员移除失败:', error);
@@ -502,9 +717,13 @@ const formatDate = (dateStr: string) => {
 const getRoleText = (role: string) => {
   const roles: Record<string, string> = {
     creator: '项目创建者',
-    core: '核心成员',
-    member: '普通成员',
-    observer: '观察者'
+    '项目负责人': '项目负责人',
+    '算法工程师': '算法工程师',
+    '前端开发工程师': '前端开发工程师',
+    '后端开发工程师': '后端开发工程师',
+    'core': '核心成员',
+    'member': '普通成员',
+    'observer': '观察者'
   };
   return roles[role] || role;
 };
@@ -512,9 +731,13 @@ const getRoleText = (role: string) => {
 const getRoleColor = (role: string): 'success' | 'info' | 'warning' | 'danger' => {
   const colors: Record<string, 'success' | 'info' | 'warning' | 'danger'> = {
     creator: 'danger',
-    core: 'success',
-    member: 'info',
-    observer: 'warning'
+    '项目负责人': 'danger',
+    '算法工程师': 'success',
+    '前端开发工程师': 'success',
+    '后端开发工程师': 'success',
+    'core': 'success',
+    'member': 'info',
+    'observer': 'warning'
   };
   return colors[role] || 'info';
 };
@@ -538,9 +761,11 @@ const getStatusColor = (status: string): 'success' | 'info' | 'warning' | 'dange
 };
 
 // 生命周期
-onMounted(() => {
-  getProjectInfo();
-  getMemberList();
+onMounted(async () => {
+  await getMemberList(); // 先加载成员列表
+  await getProjectInfo(); // 然后加载项目信息，这样可以正确显示成员数量
+  await getProjectRolesList(); // 加载项目角色列表
+  await getAvailableRolesList(); // 加载可申请角色列表
 });
 </script>
 
@@ -694,6 +919,32 @@ onMounted(() => {
   align-items: center;
 }
 
+.user-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.user-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .user-details {
+    .user-name {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .user-username {
+      font-size: 0.9rem;
+      color: #666;
+    }
+  }
+}
+
 :deep(.el-table) {
   border-radius: 8px;
   overflow: hidden;
@@ -706,4 +957,4 @@ onMounted(() => {
 :deep(.el-card__body) {
   padding: 20px;
 }
-</style> 
+</style>

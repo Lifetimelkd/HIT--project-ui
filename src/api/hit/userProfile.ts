@@ -111,4 +111,4 @@ export function getShareStats(): AxiosPromise<ShareStatsInfo> {
       downloadCount: 12
     }
   } as any);
-} 
+}

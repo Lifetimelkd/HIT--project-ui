@@ -7,7 +7,7 @@
           <template #header>
             <h3>系统配置管理</h3>
           </template>
-          
+
           <el-tabs v-model="activeSettingsTab" class="settings-tabs">
             <!-- 基础配置 -->
             <el-tab-pane label="基础配置" name="basic">
@@ -15,7 +15,7 @@
                 <el-form-item label="系统名称">
                   <el-input v-model="basicSettings.systemName" placeholder="请输入系统名称" />
                 </el-form-item>
-                
+
                 <el-form-item label="系统Logo">
                   <el-upload
                     class="logo-uploader"
@@ -31,24 +31,19 @@
                     </div>
                   </el-upload>
                 </el-form-item>
-                
+
                 <el-form-item label="系统描述">
-                  <el-input
-                    v-model="basicSettings.systemDescription"
-                    type="textarea"
-                    :rows="3"
-                    placeholder="请输入系统描述"
-                  />
+                  <el-input v-model="basicSettings.systemDescription" type="textarea" :rows="3" placeholder="请输入系统描述" />
                 </el-form-item>
-                
+
                 <el-form-item label="联系邮箱">
                   <el-input v-model="basicSettings.contactEmail" placeholder="请输入联系邮箱" />
                 </el-form-item>
-                
+
                 <el-form-item label="客服电话">
                   <el-input v-model="basicSettings.servicePhone" placeholder="请输入客服电话" />
                 </el-form-item>
-                
+
                 <el-form-item label="系统版本">
                   <el-input v-model="basicSettings.systemVersion" placeholder="请输入系统版本" />
                 </el-form-item>
@@ -59,30 +54,20 @@
             <el-tab-pane label="项目配置" name="project">
               <el-form :model="projectSettings" label-width="140px">
                 <el-form-item label="默认团队规模">
-                  <el-input-number
-                    v-model="projectSettings.defaultTeamSize"
-                    :min="2"
-                    :max="50"
-                    placeholder="默认团队规模"
-                  />
+                  <el-input-number v-model="projectSettings.defaultTeamSize" :min="2" :max="50" placeholder="默认团队规模" />
                 </el-form-item>
-                
+
                 <el-form-item label="最大团队规模">
-                  <el-input-number
-                    v-model="projectSettings.maxTeamSize"
-                    :min="5"
-                    :max="100"
-                    placeholder="最大团队规模"
-                  />
+                  <el-input-number v-model="projectSettings.maxTeamSize" :min="5" :max="100" placeholder="最大团队规模" />
                 </el-form-item>
-                
+
                 <el-form-item label="项目审核模式">
                   <el-radio-group v-model="projectSettings.approvalMode">
                     <el-radio value="auto">自动审核</el-radio>
                     <el-radio value="manual">人工审核</el-radio>
                   </el-radio-group>
                 </el-form-item>
-                
+
                 <el-form-item label="默认项目周期">
                   <el-select v-model="projectSettings.defaultDuration" placeholder="请选择默认周期">
                     <el-option label="1-3个月" value="short" />
@@ -90,7 +75,7 @@
                     <el-option label="6个月以上" value="long" />
                   </el-select>
                 </el-form-item>
-                
+
                 <el-form-item label="允许的项目类型">
                   <el-checkbox-group v-model="projectSettings.allowedTypes">
                     <el-checkbox value="academic">学术研究</el-checkbox>
@@ -100,7 +85,7 @@
                     <el-checkbox value="course">课程项目</el-checkbox>
                   </el-checkbox-group>
                 </el-form-item>
-                
+
                 <el-form-item label="项目推荐算法">
                   <el-radio-group v-model="projectSettings.recommendAlgorithm">
                     <el-radio value="similarity">相似度推荐</el-radio>
@@ -115,14 +100,9 @@
             <el-tab-pane label="安全配置" name="security">
               <el-form :model="securitySettings" label-width="140px">
                 <el-form-item label="密码最小长度">
-                  <el-input-number
-                    v-model="securitySettings.minPasswordLength"
-                    :min="6"
-                    :max="20"
-                    placeholder="密码最小长度"
-                  />
+                  <el-input-number v-model="securitySettings.minPasswordLength" :min="6" :max="20" placeholder="密码最小长度" />
                 </el-form-item>
-                
+
                 <el-form-item label="密码复杂度要求">
                   <el-checkbox-group v-model="securitySettings.passwordComplexity">
                     <el-checkbox value="uppercase">包含大写字母</el-checkbox>
@@ -131,36 +111,21 @@
                     <el-checkbox value="special">包含特殊字符</el-checkbox>
                   </el-checkbox-group>
                 </el-form-item>
-                
+
                 <el-form-item label="登录失败限制">
-                  <el-input-number
-                    v-model="securitySettings.maxLoginAttempts"
-                    :min="3"
-                    :max="10"
-                    placeholder="最大登录失败次数"
-                  />
+                  <el-input-number v-model="securitySettings.maxLoginAttempts" :min="3" :max="10" placeholder="最大登录失败次数" />
                 </el-form-item>
-                
+
                 <el-form-item label="账户锁定时间">
-                  <el-input-number
-                    v-model="securitySettings.lockoutDuration"
-                    :min="5"
-                    :max="60"
-                    placeholder="账户锁定时间（分钟）"
-                  />
+                  <el-input-number v-model="securitySettings.lockoutDuration" :min="5" :max="60" placeholder="账户锁定时间（分钟）" />
                 </el-form-item>
-                
+
                 <el-form-item label="启用双因素认证">
                   <el-switch v-model="securitySettings.enableTwoFactor" />
                 </el-form-item>
-                
+
                 <el-form-item label="IP白名单">
-                  <el-input
-                    v-model="securitySettings.ipWhitelist"
-                    type="textarea"
-                    :rows="3"
-                    placeholder="请输入IP白名单，一行一个"
-                  />
+                  <el-input v-model="securitySettings.ipWhitelist" type="textarea" :rows="3" placeholder="请输入IP白名单，一行一个" />
                 </el-form-item>
               </el-form>
             </el-tab-pane>
@@ -171,44 +136,37 @@
                 <el-form-item label="邮件通知">
                   <el-switch v-model="notificationSettings.enableEmail" />
                 </el-form-item>
-                
+
                 <el-form-item label="短信通知">
                   <el-switch v-model="notificationSettings.enableSms" />
                 </el-form-item>
-                
+
                 <el-form-item label="站内通知">
                   <el-switch v-model="notificationSettings.enableInApp" />
                 </el-form-item>
-                
+
                 <el-form-item label="邮件服务器">
                   <el-input v-model="notificationSettings.emailServer" placeholder="请输入邮件服务器地址" />
                 </el-form-item>
-                
+
                 <el-form-item label="邮件端口">
                   <el-input-number v-model="notificationSettings.emailPort" :min="1" :max="65535" />
                 </el-form-item>
-                
+
                 <el-form-item label="发件人邮箱">
                   <el-input v-model="notificationSettings.senderEmail" placeholder="请输入发件人邮箱" />
                 </el-form-item>
-                
+
                 <el-form-item label="短信API密钥">
-                  <el-input
-                    v-model="notificationSettings.smsApiKey"
-                    type="password"
-                    placeholder="请输入短信API密钥"
-                    show-password
-                  />
+                  <el-input v-model="notificationSettings.smsApiKey" type="password" placeholder="请输入短信API密钥" show-password />
                 </el-form-item>
               </el-form>
             </el-tab-pane>
           </el-tabs>
-          
+
           <div class="settings-actions">
             <el-button @click="resetSettings">重置</el-button>
-            <el-button type="primary" @click="saveSettings" :loading="saveLoading">
-              保存配置
-            </el-button>
+            <el-button type="primary" @click="saveSettings" :loading="saveLoading"> 保存配置 </el-button>
           </div>
         </el-card>
       </el-col>
@@ -221,28 +179,28 @@
             <template #header>
               <h3>快捷操作</h3>
             </template>
-            
+
             <div class="operation-list">
               <el-button type="primary" class="operation-btn" @click="handleBackup">
                 <el-icon><Download /></el-icon>
                 备份数据库
               </el-button>
-              
+
               <el-button type="success" class="operation-btn" @click="handleClearCache">
                 <el-icon><Refresh /></el-icon>
                 清理缓存
               </el-button>
-              
+
               <el-button type="warning" class="operation-btn" @click="handleOptimizeDB">
                 <el-icon><Tools /></el-icon>
                 优化数据库
               </el-button>
-              
+
               <el-button type="info" class="operation-btn" @click="handleGenerateReport">
                 <el-icon><Document /></el-icon>
                 生成报告
               </el-button>
-              
+
               <el-button type="danger" class="operation-btn" @click="handleMaintenanceMode">
                 <el-icon><Warning /></el-icon>
                 维护模式
@@ -251,11 +209,11 @@
           </el-card>
 
           <!-- 系统信息 -->
-          <el-card class="info-card" shadow="hover" style="margin-top: 20px;">
+          <el-card class="info-card" shadow="hover" style="margin-top: 20px">
             <template #header>
               <h3>系统信息</h3>
             </template>
-            
+
             <div class="info-list">
               <div class="info-item">
                 <span class="info-label">系统版本</span>
@@ -285,11 +243,11 @@
           </el-card>
 
           <!-- 最近更新 -->
-          <el-card class="updates-card" shadow="hover" style="margin-top: 20px;">
+          <el-card class="updates-card" shadow="hover" style="margin-top: 20px">
             <template #header>
               <h3>最近更新</h3>
             </template>
-            
+
             <div class="updates-list">
               <div class="update-item">
                 <div class="update-date">2024-01-15</div>
@@ -394,7 +352,7 @@ const beforeLogoUpload = (file: File) => {
 const saveSettings = async () => {
   try {
     saveLoading.value = true;
-    
+
     // TODO: 调用后端API保存配置
     const allSettings = {
       basic: basicSettings,
@@ -402,12 +360,12 @@ const saveSettings = async () => {
       security: securitySettings,
       notification: notificationSettings
     };
-    
+
     console.log('保存配置:', allSettings);
-    
+
     // 模拟保存
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     ElMessage.success('配置保存成功');
   } catch (error) {
     console.error('保存配置失败:', error);
@@ -433,7 +391,7 @@ const resetSettings = () => {
       servicePhone: '400-123-4567',
       systemVersion: 'v1.2.3'
     });
-    
+
     ElMessage.success('配置重置成功');
   });
 };
@@ -466,7 +424,7 @@ const handleMaintenanceMode = () => {
     .settings-tabs {
       margin-bottom: 20px;
     }
-    
+
     .settings-actions {
       text-align: center;
       padding-top: 20px;
@@ -595,4 +553,4 @@ const handleMaintenanceMode = () => {
     font-weight: 500;
   }
 }
-</style> 
+</style>

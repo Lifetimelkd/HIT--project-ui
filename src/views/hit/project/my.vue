@@ -75,12 +75,7 @@
       <el-card class="filter-card">
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-input
-              v-model="queryParams.projectName"
-              placeholder="搜索项目名称"
-              clearable
-              @keyup.enter="handleQuery"
-            >
+            <el-input v-model="queryParams.projectName" placeholder="搜索项目名称" clearable @keyup.enter="handleQuery">
               <template #prefix>
                 <el-icon><Search /></el-icon>
               </template>
@@ -136,21 +131,12 @@
           </div>
         </template>
 
-        <el-table
-          v-loading="loading"
-          :data="projectList"
-          @selection-change="handleSelectionChange"
-          style="width: 100%"
-        >
+        <el-table v-loading="loading" :data="projectList" @selection-change="handleSelectionChange" style="width: 100%">
           <el-table-column type="selection" width="55" />
           <el-table-column label="项目封面" width="120">
             <template #default="{ row }">
               <div class="project-cover-mini">
-                <img
-                  :src="row.coverImage || '/default-project-cover.jpg'"
-                  :alt="row.projectName"
-                  class="cover-image"
-                />
+                <img :src="row.coverImage || '/default-project-cover.jpg'" :alt="row.projectName" class="cover-image" />
               </div>
             </template>
           </el-table-column>
@@ -217,15 +203,9 @@
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
-                <el-button type="primary" size="small" @click="handleView(row.projectId)">
-                  查看
-                </el-button>
-                <el-button type="warning" size="small" @click="handleEdit(row.projectId)">
-                  编辑
-                </el-button>
-                <el-button type="info" size="small" @click="handleManageMembers(row.projectId)">
-                  成员
-                </el-button>
+                <el-button type="primary" size="small" @click="handleView(row.projectId)"> 查看 </el-button>
+                <el-button type="warning" size="small" @click="handleEdit(row.projectId)"> 编辑 </el-button>
+                <el-button type="info" size="small" @click="handleManageMembers(row.projectId)"> 成员 </el-button>
                 <el-dropdown @command="(command) => handleMoreAction(command, row)">
                   <el-button type="info" size="small">
                     更多<el-icon><ArrowDown /></el-icon>
@@ -300,9 +280,9 @@ const getProjectList = async () => {
   loading.value = true;
   try {
     const response = await listMyProject(queryParams);
-    
+
     console.log('我的项目API响应数据:', response);
-    
+
     // 参考项目广场页面的数据解析逻辑
     // 由于axios响应拦截器已经提取了data，response就是实际的数据
     // API返回格式: { code: 200, msg: "查询成功", rows: [...], total: 4 }
@@ -317,8 +297,7 @@ const getProjectList = async () => {
       else if (Array.isArray(responseData)) {
         projectList.value = responseData;
         total.value = responseData.length;
-      }
-      else {
+      } else {
         console.warn('未识别的响应格式:', responseData);
         projectList.value = [];
         total.value = 0;
@@ -327,10 +306,10 @@ const getProjectList = async () => {
       projectList.value = [];
       total.value = 0;
     }
-    
+
     console.log('解析后的我的项目列表:', projectList.value);
     console.log('总数:', total.value);
-    
+
     // 计算统计数据
     calculateStats();
   } catch (error) {
@@ -346,9 +325,9 @@ const getProjectList = async () => {
 // 计算统计数据
 const calculateStats = () => {
   projectStats.total = projectList.value.length;
-  projectStats.active = projectList.value.filter(p => p.status === 'active').length;
-  projectStats.recruiting = projectList.value.filter(p => p.recruitmentStatus === 'open').length;
-  projectStats.completed = projectList.value.filter(p => p.status === 'completed').length;
+  projectStats.active = projectList.value.filter((p) => p.status === 'active').length;
+  projectStats.recruiting = projectList.value.filter((p) => p.recruitmentStatus === 'open').length;
+  projectStats.completed = projectList.value.filter((p) => p.status === 'completed').length;
 };
 
 // 搜索
@@ -456,14 +435,14 @@ const handleBatchDelete = () => {
     ElMessage.warning('请选择要删除的项目');
     return;
   }
-  
+
   ElMessageBox.confirm(`确定要删除选中的 ${selectedProjects.value.length} 个项目吗？删除后无法恢复。`, '确认批量删除', {
     confirmButtonText: '确定删除',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     try {
-      const projectIds = selectedProjects.value.map(p => p.projectId!);
+      const projectIds = selectedProjects.value.map((p) => p.projectId!);
       await delProject(projectIds);
       ElMessage.success('批量删除成功');
       getProjectList();
@@ -767,4 +746,4 @@ onMounted(() => {
 :deep(.el-card__body) {
   padding: 20px;
 }
-</style> 
+</style>
