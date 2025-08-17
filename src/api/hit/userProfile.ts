@@ -3,8 +3,8 @@ import { AxiosPromise } from 'axios';
 
 // 用户档案信息接口
 export interface UserProfileInfo {
-  profileId?: number;
-  userId?: number;
+  profileId?: string;
+  userId?: string;
   studentId?: string;
   realName?: string;
   college?: string;
@@ -25,7 +25,9 @@ export interface UserProfileInfo {
   totalProjects?: number;
   completedProjects?: number;
   status?: string;
-  deptId?: number;
+  createTime?: string;
+  updateTime?: string;
+  deptId?: string;
 }
 
 // 用户技能信息接口
@@ -54,9 +56,19 @@ export function getCurrentUserProfile(): AxiosPromise<UserProfileInfo> {
 /**
  * 根据ID获取用户档案信息
  */
-export function getUserProfile(profileId: number): AxiosPromise<UserProfileInfo> {
+export function getUserProfile(profileId: string): AxiosPromise<UserProfileInfo> {
   return request({
-    url: `/hitUserProfile/userProfile/${profileId}`,
+    url: `/hit/userProfile/${profileId}`,
+    method: 'get'
+  });
+}
+
+/**
+ * 根据用户ID获取用户档案信息
+ */
+export function getUserProfileByUserId(userId: string): AxiosPromise<UserProfileInfo> {
+  return request({
+    url: `/hitUserProfile/userProfile/user/${userId}`,
     method: 'get'
   });
 }

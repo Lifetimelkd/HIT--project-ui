@@ -14,7 +14,7 @@
           <p class="page-subtitle" v-if="projectInfo">{{ projectInfo.projectName }}</p>
         </div>
         <div class="header-right">
-          <el-button type="primary" @click="handleInviteMember">
+          <el-button v-if="showManagementFeatures && isProjectLeader" type="primary" @click="handleInviteMember">
             <el-icon><Plus /></el-icon>
             邀请成员
           </el-button>
@@ -81,18 +81,21 @@
           </el-table-column>
           <el-table-column prop="roleName" label="角色" width="120">
             <template #default="{ row }">
-              <el-tag :type="getRoleColor(row.role)">
-                {{ getRoleText(row.role) }}
+              <el-tag :type="getRoleColor(row.roleName || row.role)">
+                {{ row.roleName || row.role || '未分配角色' }}
               </el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="department" label="部门/专业" width="150" />
           <el-table-column prop="skills" label="技能标签" min-width="200">
             <template #default="{ row }">
-              <el-tag v-for="skill in (row.skills || '').split(',').slice(0, 3)" :key="skill" size="small" style="margin-right: 5px">
-                {{ skill }}
-              </el-tag>
-              <span v-if="(row.skills || '').split(',').length > 3" class="more-skills"> +{{ (row.skills || '').split(',').length - 3 }} </span>
+              <div v-if="row.skills && row.skills.length > 0">
+                <el-tag v-for="skill in row.skills.slice(0, 3)" :key="skill.userSkillId" size="small" style="margin-right: 5px">
+                  {{ skill.tagName }}
+                </el-tag>
+                <span v-if="row.skills.length > 3" class="more-skills"> +{{ row.skills.length - 3 }} </span>
+              </div>
+              <span v-else class="no-skills">暂无技能标签</span>
             </template>
           </el-table-column>
           <el-table-column prop="joinTime" label="加入时间" width="120">
@@ -107,13 +110,19 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="250" fixed="right">
             <template #default="{ row }">
-              <div class="action-buttons">
+              <div class="action-buttons" v-if="showActionButtons">
+                <!-- 查看按钮 - 所有项目成员都可以看到 -->
                 <el-button type="primary" size="small" @click="handleViewProfile(row.memberId)"> 查看 </el-button>
+
+                <!-- 编辑技能按钮 - 根据权限控制 -->
+                <el-button v-if="canEditMember(row)" type="success" size="small" @click="handleEditMemberSkills(row)"> 编辑技能 </el-button>
+
+                <!-- 更多操作下拉菜单 - 只有项目负责人且不是创建者/负责人角色的成员可以操作 -->
                 <el-dropdown
                   @command="(command) => handleMemberAction(command, row)"
-                  v-if="row.role !== 'creator' && row.role !== '项目负责人' && row.isLeader !== '1'"
+                  v-if="isProjectLeader && row.role !== 'creator' && row.role !== '项目负责人' && row.isLeader !== '1'"
                 >
                   <el-button type="info" size="small">
                     更多<el-icon><ArrowDown /></el-icon>
@@ -275,6 +284,100 @@
         <el-button type="primary" @click="handleChangeRole">确认变更</el-button>
       </template>
     </el-dialog>
+
+    <!-- 技能编辑对话框 -->
+    <el-dialog
+      v-model="skillDialogVisible"
+      :title="`编辑 ${currentEditingMember?.memberName || '成员'} 的技能`"
+      width="800px"
+      @close="handleSkillDialogClose"
+    >
+      <div class="skill-edit-content">
+        <!-- 当前技能列表 -->
+        <div class="current-skills-section">
+          <h4>当前技能</h4>
+          <div class="skills-list" v-loading="skillLoading">
+            <div v-if="currentEditingMember?.skills?.length > 0" class="skill-items">
+              <div v-for="skill in currentEditingMember.skills" :key="skill.userSkillId" class="skill-item">
+                <div class="skill-info">
+                  <div class="skill-header">
+                    <span class="skill-name">{{ skill.tagName }}</span>
+                    <div class="skill-actions">
+                      <el-button type="text" size="small" @click="handleEditSkill(skill)">
+                        <el-icon><Edit /></el-icon>
+                      </el-button>
+                      <el-button type="text" size="small" @click="handleDeleteSkill(skill)" class="delete-btn">
+                        <el-icon><Delete /></el-icon>
+                      </el-button>
+                    </div>
+                  </div>
+                  <div class="skill-level">
+                    <el-rate v-model="skill.skillLevel" :max="5" show-score score-template="等级 {value}" @change="handleSkillLevelChange(skill)" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="no-skills-message">
+              <el-empty description="暂无技能标签" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 添加新技能 -->
+        <div class="add-skill-section">
+          <h4>添加新技能</h4>
+          <el-form ref="skillFormRef" :model="skillForm" label-width="80px">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="技能标签" prop="tagId">
+                  <el-select v-model="skillForm.tagId" placeholder="请选择技能标签" style="width: 100%" filterable>
+                    <el-option
+                      v-for="tag in availableSkillTags"
+                      :key="tag.tagId"
+                      :label="tag.tagName"
+                      :value="tag.tagId"
+                    >
+                      <span style="float: left">{{ tag.tagName }}</span>
+                      <span style="float: right; color: #8492a6; font-size: 13px">{{ getSkillCategory(tag.tagCategory) }}</span>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="技能等级" prop="skillLevel">
+                  <el-rate v-model="skillForm.skillLevel" :max="5" show-text :texts="['了解', '熟悉', '熟练', '精通', '专家']" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="学习时长" prop="learningTime">
+                  <el-input-number v-model="skillForm.learningTime" :min="0" :step="10" placeholder="小时" style="width: 100%" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="相关项目" prop="projectCount">
+                  <el-input-number v-model="skillForm.projectCount" :min="0" placeholder="项目数量" style="width: 100%" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label="技能描述" prop="description">
+              <el-input v-model="skillForm.description" type="textarea" :rows="2" placeholder="描述技能经验..." maxlength="200" show-word-limit />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleAddSkill" :loading="skillLoading">
+                <el-icon><Plus /></el-icon>
+                添加技能
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button @click="skillDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -282,6 +385,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Plus, ArrowDown, ArrowLeft, UserFilled, Calendar, Search, User, Edit, Delete } from '@element-plus/icons-vue';
 
 // 改为导入完整的API接口定义
 import {
@@ -307,10 +411,20 @@ import {
 import { listUser } from '@/api/system/user';
 import type { UserVO, UserQuery } from '@/api/system/user/types';
 
+// 新增：导入用户技能相关接口
+import { getUserSkillsWithTag, addUserSkill, updateUserSkill, delUserSkill, UserSkillForm } from '@/api/hit/userSkill';
+import { getSkillTagList } from '@/api/hit/skillTag';
+
+// 新增：导入用户store
+import { useUserStore } from '@/store/modules/user';
+
 // 路由相关
 const router = useRouter();
 const route = useRoute();
 const projectId = computed(() => route.params.id as string); // 使用string类型而不是Number
+
+// 新增：用户store
+const userStore = useUserStore();
 
 // 响应式数据
 const loading = ref(false);
@@ -323,6 +437,13 @@ const inviteLoading = ref(false);
 const searchLoading = ref(false);
 const searchUserList = ref<any[]>([]);
 const currentMember = ref<any>(null);
+
+// 新增：技能相关数据
+const skillDialogVisible = ref(false);
+const skillFormRef = ref();
+const skillTags = ref<any[]>([]);
+const currentEditingMember = ref<any>(null);
+const skillLoading = ref(false);
 
 // 用户选择相关数据
 const userSelectorVisible = ref(false);
@@ -348,6 +469,17 @@ const inviteForm = reactive({
 
 const roleForm = reactive({
   newRole: ''
+});
+
+// 新增：技能表单数据
+const skillForm = reactive<UserSkillForm>({
+  userSkillId: undefined,
+  userId: undefined,
+  tagId: undefined,
+  skillLevel: 3,
+  learningTime: 0,
+  projectCount: 0,
+  description: ''
 });
 
 // 表单验证规则
@@ -379,6 +511,63 @@ const filteredUserList = computed(() => {
       user.nickName?.toLowerCase().includes(userSearchKeyword.value.toLowerCase()) ||
       user.email?.toLowerCase().includes(userSearchKeyword.value.toLowerCase())
   );
+});
+
+// 新增：权限控制计算属性
+const currentUserId = computed(() => userStore.userId);
+
+// 判断当前用户是否为项目负责人
+const isProjectLeader = computed(() => {
+  if (!currentUserId.value || !memberList.value.length) return false;
+
+  const currentUserMember = memberList.value.find((member) => member.userId === currentUserId.value || member.memberId === currentUserId.value);
+
+  return (
+    currentUserMember &&
+    (currentUserMember.role === '项目负责人' ||
+      currentUserMember.memberRole === '项目负责人' ||
+      currentUserMember.isLeader === '1' ||
+      projectInfo.value?.creatorId === currentUserId.value)
+  );
+});
+
+// 判断当前用户是否为项目成员
+const isProjectMember = computed(() => {
+  if (!currentUserId.value || !memberList.value.length) return false;
+
+  return memberList.value.some((member) => member.userId === currentUserId.value || member.memberId === currentUserId.value);
+});
+
+// 判断是否可以编辑某个成员的信息
+const canEditMember = computed(() => (member: any) => {
+  if (isProjectLeader.value) return true; // 项目负责人可以编辑所有成员
+  if (!isProjectMember.value) return false; // 非项目成员不能编辑任何人
+
+  // 普通成员只能编辑自己
+  return member.userId === currentUserId.value || member.memberId === currentUserId.value;
+});
+
+// 判断是否显示管理功能（邀请成员等）
+const showManagementFeatures = computed(() => {
+  return isProjectMember.value; // 只有项目成员才能看到管理功能
+});
+
+// 判断是否显示操作按钮
+const showActionButtons = computed(() => {
+  return isProjectMember.value; // 只有项目成员才能看到操作按钮
+});
+
+// 新增：过滤可用的技能标签（排除当前成员已有的技能）
+const availableSkillTags = computed(() => {
+  if (!currentEditingMember.value || !currentEditingMember.value.skills) {
+    return skillTags.value;
+  }
+
+  // 获取当前成员已有的技能标签ID
+  const existingTagIds = currentEditingMember.value.skills.map((skill: any) => skill.tagId);
+
+  // 过滤掉已有的技能标签
+  return skillTags.value.filter((tag: any) => !existingTagIds.includes(tag.tagId));
 });
 
 // 获取项目信息
@@ -418,16 +607,19 @@ const getMemberList = async () => {
     console.log('提取的原始成员数据:', rawMembers); // 调试日志
 
     // 映射后端字段到前端期望的字段
-    memberList.value = rawMembers.map((member: any) => ({
+    const mappedMembers = rawMembers.map((member: any) => ({
       memberId: member.memberId,
+      userId: member.userId, // 确保有userId字段
       memberName: member.userName || member.realName || '未知用户', // 添加memberName字段
       userName: member.userName,
       email: member.contactInfo || '未提供邮箱', // 使用contactInfo作为email
       avatar: member.avatarUrl,
-      role: member.memberRole, // 将memberRole映射到role
+      role: member.roleName || member.memberRole, // 优先使用roleName，如果没有则使用memberRole作为兜底
       memberRole: member.memberRole,
+      roleName: member.roleName, // 保留roleName字段
       department: member.college || member.major || '未设置', // 合并college和major作为department
-      skills: member.major || '', // 使用major作为技能标签
+      skills: [], // 初始化技能数组，稍后异步加载
+      skillsText: '', // 用于显示的技能文本
       joinTime: member.joinTime,
       status: member.memberStatus, // 将memberStatus映射到status
       isLeader: member.isLeader,
@@ -438,6 +630,11 @@ const getMemberList = async () => {
       ...member
     }));
 
+    memberList.value = mappedMembers;
+
+    // 异步加载每个成员的技能数据
+    await loadMembersSkills();
+
     console.log('处理后的成员列表:', memberList.value); // 调试日志
   } catch (error) {
     console.error('获取成员列表失败:', error);
@@ -446,6 +643,36 @@ const getMemberList = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// 新增：为所有成员加载技能数据
+const loadMembersSkills = async () => {
+  const skillPromises = memberList.value.map(async (member) => {
+    try {
+      // 使用userId或memberId获取技能数据
+      const userId = member.userId || member.memberId;
+      if (!userId) return;
+
+      const skillResponse = await getUserSkillsWithTag(userId);
+      const skillData = skillResponse.data || [];
+
+      // 更新成员的技能信息
+      member.skills = skillData;
+
+      // 生成技能显示文本（最多显示3个）
+      const skillNames = skillData.map((skill: any) => skill.tagName).filter(Boolean);
+      member.skillsText = skillNames.slice(0, 3).join(',');
+      member.skillsCount = skillNames.length;
+    } catch (error) {
+      console.error(`获取用户${member.memberId}技能失败:`, error);
+      member.skills = [];
+      member.skillsText = '';
+      member.skillsCount = 0;
+    }
+  });
+
+  // 等待所有技能数据加载完成
+  await Promise.all(skillPromises);
 };
 
 // 搜索用户
@@ -634,6 +861,17 @@ const handleViewProfile = (memberId: number) => {
   ElMessage.info('查看用户资料功能开发中...');
 };
 
+const handleEditMemberSkills = async (member: any) => {
+  currentEditingMember.value = member;
+
+  // 确保技能标签数据已加载
+  if (skillTags.value.length === 0) {
+    await loadSkillTags();
+  }
+
+  skillDialogVisible.value = true;
+};
+
 const handleMemberAction = async (command: string, member: any) => {
   currentMember.value = member;
 
@@ -708,6 +946,115 @@ const handleRemoveMember = async (member: any) => {
   }
 };
 
+// 技能编辑对话框相关方法
+const handleSkillDialogClose = () => {
+  resetSkillForm();
+};
+
+const resetSkillForm = () => {
+  Object.assign(skillForm, {
+    userSkillId: undefined,
+    userId: undefined,
+    tagId: undefined,
+    skillLevel: 3,
+    learningTime: 0,
+    projectCount: 0,
+    description: ''
+  });
+  skillFormRef.value?.resetFields();
+};
+
+const handleEditSkill = (skill: any) => {
+  skillForm.userSkillId = skill.userSkillId;
+  skillForm.tagId = skill.tagId;
+  skillForm.skillLevel = skill.skillLevel;
+  skillForm.learningTime = skill.learningTime;
+  skillForm.projectCount = skill.projectCount;
+  skillForm.description = skill.description;
+  skillDialogVisible.value = true;
+};
+
+const handleDeleteSkill = async (skill: any) => {
+  try {
+    await ElMessageBox.confirm(`确定要删除技能"${skill.tagName}"吗？`, '确认删除', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+
+    await delUserSkill([skill.userSkillId]);
+    ElMessage.success('技能删除成功');
+
+    // 刷新当前成员的技能列表
+    await loadMembersSkills();
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('技能删除失败:', error);
+      ElMessage.error('技能删除失败');
+    }
+  }
+};
+
+const handleSkillLevelChange = (skill: any) => {
+  // 技能等级更新
+  updateSkillLevel(skill);
+};
+
+const updateSkillLevel = async (skill: any) => {
+  try {
+    await updateUserSkill(skill);
+    ElMessage.success(`技能等级已更新为 ${skill.skillLevel} 级`);
+    // 刷新成员技能列表
+    await loadMembersSkills();
+  } catch (error) {
+    console.error('更新技能等级失败:', error);
+    ElMessage.error('更新技能等级失败');
+  }
+};
+
+const handleAddSkill = async () => {
+  if (!skillForm.tagId) {
+    ElMessage.error('请选择技能标签');
+    return;
+  }
+  if (!skillForm.skillLevel) {
+    ElMessage.error('请选择技能等级');
+    return;
+  }
+
+  // 检查是否重复添加技能
+  if (currentEditingMember.value?.skills) {
+    const existingSkill = currentEditingMember.value.skills.find((skill: any) => skill.tagId === skillForm.tagId);
+    if (existingSkill) {
+      ElMessage.warning('该技能已存在，请选择其他技能标签');
+      return;
+    }
+  }
+
+  skillLoading.value = true;
+  try {
+    const response = await addUserSkill({
+      userId: currentEditingMember.value.userId,
+      tagId: skillForm.tagId,
+      skillLevel: skillForm.skillLevel,
+      learningTime: skillForm.learningTime,
+      projectCount: skillForm.projectCount,
+      description: skillForm.description
+    });
+
+    ElMessage.success('技能添加成功');
+    resetSkillForm();
+
+    // 刷新当前成员的技能列表
+    await loadMembersSkills();
+  } catch (error) {
+    console.error('技能添加失败:', error);
+    ElMessage.error('技能添加失败');
+  } finally {
+    skillLoading.value = false;
+  }
+};
+
 // 工具函数
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '-';
@@ -729,16 +1076,38 @@ const getRoleText = (role: string) => {
 };
 
 const getRoleColor = (role: string): 'success' | 'info' | 'warning' | 'danger' => {
+  if (!role) return 'info';
+
   const colors: Record<string, 'success' | 'info' | 'warning' | 'danger'> = {
+    // 通用角色
     creator: 'danger',
     '项目负责人': 'danger',
+    '项目创建者': 'danger',
+
+    // 开发角色
     '算法工程师': 'success',
     '前端开发工程师': 'success',
     '后端开发工程师': 'success',
+    '前端工程师': 'success',
+    '区块链开发工程师': 'success',
+    '智能合约开发工程师': 'success',
+    '控制系统工程师': 'success',
+    '机械设计工程师': 'success',
+    '嵌入式工程师': 'success',
+    '软件工程师': 'success',
+    '物联网开发工程师': 'success',
+    '数据工程师': 'success',
+    '移动端工程师': 'success',
+
+    // 通用等级角色
     'core': 'success',
+    '核心成员': 'warning',
     'member': 'info',
-    'observer': 'warning'
+    '普通成员': 'info',
+    'observer': 'warning',
+    '观察者': 'warning'
   };
+
   return colors[role] || 'info';
 };
 
@@ -760,13 +1129,61 @@ const getStatusColor = (status: string): 'success' | 'info' | 'warning' | 'dange
   return colors[status] || 'info';
 };
 
+// 新增：获取技能分类显示名称（参考userSkill/index.vue）
+const getSkillCategory = (category: string) => {
+  const skillCategories = [
+    { label: '全部', value: 'all' },
+    { label: '编程语言', value: 'programming' },
+    { label: '前端技术', value: 'frontend' },
+    { label: '后端技术', value: 'backend' },
+    { label: '人工智能', value: 'ai' },
+    { label: '数据库', value: 'database' },
+    { label: '软技能', value: 'soft_skill' },
+    { label: '设计', value: 'design' }
+  ];
+
+  const categoryObj = skillCategories.find((c) => c.value === category);
+  return categoryObj ? categoryObj.label : category;
+};
+
 // 生命周期
 onMounted(async () => {
+  // 确保用户信息已加载
+  if (!userStore.userId) {
+    try {
+      await userStore.getInfo();
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+    }
+  }
+
   await getMemberList(); // 先加载成员列表
   await getProjectInfo(); // 然后加载项目信息，这样可以正确显示成员数量
   await getProjectRolesList(); // 加载项目角色列表
   await getAvailableRolesList(); // 加载可申请角色列表
+  await loadSkillTags(); // 加载技能标签列表
 });
+
+// 新增：加载技能标签
+const loadSkillTags = async () => {
+  try {
+    const response = await getSkillTagList();
+    console.log('技能标签API响应:', response); // 调试日志
+
+    // 参考userSkill/index.vue的数据处理方式
+    if (response && response.code === 200) {
+      skillTags.value = response.rows || [];
+    } else {
+      console.error('获取技能标签数据失败:', response?.msg || '未知错误');
+      skillTags.value = [];
+    }
+
+    console.log('处理后的技能标签数据:', skillTags.value); // 调试日志
+  } catch (error) {
+    console.error('获取技能标签失败:', error);
+    skillTags.value = [];
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -909,6 +1326,11 @@ onMounted(async () => {
   font-size: 0.8rem;
 }
 
+.no-skills {
+  color: #999;
+  font-size: 0.8rem;
+}
+
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -956,5 +1378,93 @@ onMounted(async () => {
 
 :deep(.el-card__body) {
   padding: 20px;
+}
+
+.skill-edit-content {
+  .current-skills-section {
+    margin-bottom: 30px;
+  }
+
+  .skills-list {
+    .skill-items {
+      .skill-item {
+        background-color: #f5f7fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+
+        .skill-info {
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+
+          .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+
+            .skill-name {
+              font-weight: bold;
+              color: #333;
+              font-size: 1rem;
+            }
+
+            .skill-actions {
+              display: flex;
+              gap: 5px;
+
+              .delete-btn {
+                color: #f56c6c;
+
+                &:hover {
+                  color: #f56c6c;
+                }
+              }
+            }
+          }
+
+          .skill-level {
+            .el-rate {
+              font-size: 0.9rem;
+              color: #f56c6c;
+            }
+          }
+        }
+      }
+    }
+
+    .no-skills-message {
+      padding: 20px;
+      text-align: center;
+      color: #909399;
+    }
+  }
+
+  .add-skill-section {
+    .el-form {
+      .el-row {
+        margin-bottom: 15px;
+      }
+
+      .el-form-item {
+        margin-bottom: 15px;
+      }
+
+      .el-input-number {
+        width: 100%;
+      }
+
+      .el-textarea {
+        width: 100%;
+      }
+    }
+  }
 }
 </style>

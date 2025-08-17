@@ -1,25 +1,20 @@
 import request from '@/utils/request';
 
+// 用户作品集表单对象
 export interface UserPortfolioForm {
-  portfolioId?: number;
-  userId?: number;
-  portfolioTitle?: string;
-  workType?: string;
-  portfolioDescription?: string;
-  techStack?: string;
-  personalRole?: string;
-  projectUrl?: string;
-  repositoryUrl?: string;
-  downloadUrl?: string;
+  portfolioId?: string;
+  userId?: string;
+  portfolioTitle: string;
+  portfolioDescription: string;
+  portfolioContent: string;
+  portfolioType: string;
   coverImage?: string;
-  startDate?: string;
-  endDate?: string;
-  teamSize?: number;
+  attachments?: string;
+  tags?: string;
+  isPublic: string;
+  allowComments: string;
   viewCount?: number;
   likeCount?: number;
-  isFeatured?: string;
-  isPublic?: string;
-  orderNum?: number;
   status?: string;
 }
 
@@ -41,8 +36,8 @@ export function getCurrentUserPortfolios(query?: any) {
   });
 }
 
-// 获取用户作品集详情
-export function getUserPortfolio(portfolioId: number) {
+// 查询用户作品集详细信息
+export function getUserPortfolio(portfolioId: string) {
   return request({
     url: `/hit/userPortfolio/${portfolioId}`,
     method: 'get'
@@ -68,15 +63,15 @@ export function updateUserPortfolio(data: UserPortfolioForm) {
 }
 
 // 删除用户作品集
-export function delUserPortfolio(portfolioIds: number[]) {
+export function delUserPortfolio(portfolioIds: string[]) {
   return request({
     url: `/hit/userPortfolio/${portfolioIds}`,
     method: 'delete'
   });
 }
 
-// 查询用户作品集列表（公开展示）
-export function getPublicPortfolios(userId: number) {
+// 查询公开作品集
+export function getPublicPortfolios(userId: string) {
   return request({
     url: `/hit/userPortfolio/public/${userId}`,
     method: 'get'
@@ -100,16 +95,16 @@ export function getHotPortfolios(limit: number = 10) {
   });
 }
 
-// 增加浏览次数
-export function increaseViewCount(portfolioId: number) {
+// 增加浏览量
+export function increaseViewCount(portfolioId: string) {
   return request({
     url: `/hit/userPortfolio/view/${portfolioId}`,
     method: 'post'
   });
 }
 
-// 增加点赞次数
-export function increaseLikeCount(portfolioId: number) {
+// 增加点赞数
+export function increaseLikeCount(portfolioId: string) {
   return request({
     url: `/hit/userPortfolio/like/${portfolioId}`,
     method: 'post'
@@ -117,10 +112,10 @@ export function increaseLikeCount(portfolioId: number) {
 }
 
 // 设置作品集置顶
-export function setPortfolioTop(portfolioId: number, isTop: number) {
+export function setPortfolioTop(portfolioId: string, isTop: number) {
   return request({
-    url: `/hit/userPortfolio/setTop/${portfolioId}`,
-    method: 'post',
+    url: `/hit/userPortfolio/top/${portfolioId}`,
+    method: 'put',
     params: { isTop }
   });
 }

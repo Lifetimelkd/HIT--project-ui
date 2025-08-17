@@ -67,6 +67,16 @@
         <el-form-item label="学号">
           <el-input v-model="userProfile.studentId" placeholder="请输入学号" />
         </el-form-item>
+        <el-form-item label="学院">
+          <el-select v-model="userProfile.college" placeholder="请选择学院">
+            <el-option v-for="item in hit_college" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="年级">
+          <el-select v-model="userProfile.grade" placeholder="请选择年级">
+            <el-option v-for="item in hit_grade" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="专业">
           <el-input v-model="userProfile.major" placeholder="请输入专业" />
         </el-form-item>

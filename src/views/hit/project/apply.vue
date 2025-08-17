@@ -52,6 +52,27 @@
         </template>
 
         <el-form ref="formRef" :model="applicationForm" :rules="formRules" label-width="120px" size="large">
+          <el-form-item label="申请岗位" prop="roleId">
+            <el-select v-model="applicationForm.roleId" placeholder="请选择您要申请的岗位" style="width: 100%" :loading="rolesLoading">
+              <el-option
+                v-for="role in availableRoles"
+                :key="role.roleId"
+                :label="`${role.roleName} (${role.currentCount}/${role.requiredCount})`"
+                :value="role.roleId"
+              >
+                <div class="role-option">
+                  <div class="role-name">{{ role.roleName }}</div>
+                  <div class="role-info">
+                    <span class="role-count">{{ role.currentCount }}/{{ role.requiredCount }}</span>
+                    <span v-if="role.experienceRequired" class="role-exp">{{ role.experienceRequired }}</span>
+                  </div>
+                  <div v-if="role.roleDescription" class="role-desc">{{ role.roleDescription }}</div>
+                </div>
+              </el-option>
+            </el-select>
+            <div class="field-tip">请选择一个您感兴趣且符合要求的岗位</div>
+          </el-form-item>
+
           <el-form-item label="申请理由" prop="applicationReason">
             <el-input
               v-model="applicationForm.applicationReason"
@@ -144,18 +165,20 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { getPublicProject, ProjectInfo, applyToProject, ApplicationForm } from '@/api/hit/project';
+import { getPublicProject, ProjectInfo, applyToProject, ApplicationForm, getAvailableProjectRoles, ProjectRole } from '@/api/hit/project';
 import { globalHeaders } from '@/utils/request';
 
 const router = useRouter();
 const route = useRoute();
 const formRef = ref();
 
-const projectId = Number(route.params.id);
+const projectId = route.params.id as string;
 const projectLoading = ref(false);
 const submitting = ref(false);
 const resumeUploading = ref(false);
+const rolesLoading = ref(false);
 const projectInfo = ref<ProjectInfo | null>(null);
+const availableRoles = ref<ProjectRole[]>([]);
 
 // 上传配置
 const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload');
@@ -164,6 +187,7 @@ const uploadHeaders = ref(globalHeaders());
 // 申请表单
 const applicationForm = reactive<ApplicationForm>({
   projectId: projectId,
+  roleId: '',
   applicationReason: '',
   selfIntroduction: '',
   relevantExperience: '',
@@ -176,6 +200,7 @@ const applicationForm = reactive<ApplicationForm>({
 
 // 表单验证规则
 const formRules = {
+  roleId: [{ required: true, message: '请选择申请岗位', trigger: 'change' }],
   applicationReason: [
     { required: true, message: '请填写申请理由', trigger: 'blur' },
     { min: 20, max: 500, message: '申请理由长度在 20 到 500 个字符', trigger: 'blur' }
@@ -214,6 +239,29 @@ const getProjectInfo = async () => {
     router.back();
   } finally {
     projectLoading.value = false;
+  }
+};
+
+// 获取可申请岗位
+const getAvailableRoles = async () => {
+  rolesLoading.value = true;
+  try {
+    console.log('正在获取项目可用岗位，项目ID:', projectId);
+    const response = await getAvailableProjectRoles(projectId);
+    console.log('可用岗位API响应:', response);
+
+    if (response && response.code === 200) {
+      availableRoles.value = response.data || [];
+      console.log('可用岗位列表:', availableRoles.value);
+    } else {
+      console.warn('获取可申请岗位响应异常:', response);
+      availableRoles.value = [];
+    }
+  } catch (error) {
+    console.error('获取可申请岗位失败:', error);
+    ElMessage.error('获取可申请岗位失败');
+  } finally {
+    rolesLoading.value = false;
   }
 };
 
@@ -261,6 +309,7 @@ const handleSubmit = async () => {
 
     submitting.value = true;
 
+    console.log('正在提交申请，表单数据:', applicationForm);
     await applyToProject(applicationForm);
 
     ElMessage.success('申请提交成功！请等待项目负责人审核。');
@@ -312,12 +361,13 @@ const getStatusText = (status: string) => {
 
 // 生命周期
 onMounted(() => {
-  if (!projectId || isNaN(projectId)) {
+  if (!projectId) {
     ElMessage.error('项目ID无效');
     router.back();
     return;
   }
   getProjectInfo();
+  getAvailableRoles();
 });
 </script>
 
@@ -473,6 +523,45 @@ onMounted(() => {
   margin-top: 5px;
   font-size: 0.8rem;
   color: #999;
+}
+
+.field-tip {
+  margin-top: 5px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.role-option {
+  padding: 8px 0;
+
+  .role-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+  }
+
+  .role-info {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+
+    .role-count {
+      color: #409eff;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .role-exp {
+      color: #e6a23c;
+      font-size: 0.85rem;
+    }
+  }
+
+  .role-desc {
+    color: #666;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
 }
 
 .form-actions {

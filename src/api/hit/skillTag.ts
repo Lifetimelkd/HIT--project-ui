@@ -1,14 +1,16 @@
 import request from '@/utils/request';
 
+// 技能标签表单对象
 export interface SkillTagForm {
-  tagId?: number;
-  tagName?: string;
-  tagCategory?: string;
-  parentId?: number;
-  description?: string;
-  isHot?: boolean;
-  orderNum?: number;
-  status?: string;
+  tagId?: string;
+  tagName: string;
+  tagCategory: string;
+  parentId?: string;
+  tagDescription?: string;
+  tagColor?: string;
+  isActive?: string;
+  sortOrder?: number;
+  useCount?: number;
 }
 
 // 查询技能标签列表
@@ -20,8 +22,8 @@ export function getSkillTagList(query?: any) {
   });
 }
 
-// 获取技能标签详情
-export function getSkillTag(tagId: number) {
+// 查询技能标签详细信息
+export function getSkillTag(tagId: string) {
   return request({
     url: `/hit/skillTag/${tagId}`,
     method: 'get'
@@ -47,7 +49,7 @@ export function updateSkillTag(data: SkillTagForm) {
 }
 
 // 删除技能标签
-export function delSkillTag(tagIds: number[]) {
+export function delSkillTag(tagIds: string[]) {
   return request({
     url: `/hit/skillTag/${tagIds}`,
     method: 'delete'
@@ -70,10 +72,10 @@ export function getTagsByCategory(category: string) {
   });
 }
 
-// 增加标签使用次数
-export function increaseUseCount(tagId: number) {
+// 增加使用次数
+export function increaseUseCount(tagId: string) {
   return request({
-    url: `/hit/skillTag/useCount/${tagId}`,
+    url: `/hit/skillTag/use/${tagId}`,
     method: 'post'
   });
 }

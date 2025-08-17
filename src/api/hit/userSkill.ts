@@ -1,13 +1,14 @@
 import request from '@/utils/request';
 
+// 用户技能表单对象
 export interface UserSkillForm {
-  userSkillId?: number;
-  userId?: number;
-  tagId?: number;
-  skillLevel?: number;
+  userSkillId?: string;
+  userId?: string | number;
+  tagId?: string;
+  skillLevel: number;
   learningTime?: number;
   projectCount?: number;
-  isCertified?: boolean;
+  isCertified?: boolean | number; // 支持boolean和number类型
   description?: string;
 }
 
@@ -21,7 +22,7 @@ export function getUserSkillList(query?: any) {
 }
 
 // 获取用户技能详情
-export function getUserSkill(userSkillId: number) {
+export function getUserSkill(userSkillId: string) {
   return request({
     url: `/hit/userSkill/${userSkillId}`,
     method: 'get'
@@ -47,7 +48,7 @@ export function updateUserSkill(data: UserSkillForm) {
 }
 
 // 删除用户技能
-export function delUserSkill(userSkillIds: number[]) {
+export function delUserSkill(userSkillIds: string[]) {
   return request({
     url: `/hit/userSkill/${userSkillIds}`,
     method: 'delete'
@@ -55,7 +56,7 @@ export function delUserSkill(userSkillIds: number[]) {
 }
 
 // 查询用户技能列表（包含标签信息）
-export function getUserSkillsWithTag(userId: number) {
+export function getUserSkillsWithTag(userId: string | number) {
   return request({
     url: `/hit/userSkill/user/${userId}`,
     method: 'get'
@@ -63,7 +64,7 @@ export function getUserSkillsWithTag(userId: number) {
 }
 
 // 根据标签ID查询用户列表
-export function getUsersBySkillTag(tagId: number) {
+export function getUsersBySkillTag(tagId: string) {
   return request({
     url: `/hit/userSkill/tag/${tagId}`,
     method: 'get'
@@ -71,19 +72,19 @@ export function getUsersBySkillTag(tagId: number) {
 }
 
 // 批量保存用户技能
-export function batchSaveUserSkills(userId: number, skillList: UserSkillForm[]) {
+export function batchSaveUserSkills(userId: string | number, skillList: UserSkillForm[]) {
   return request({
-    url: `/hit/userSkill/batch/${userId}`,
+    url: `/hit/userSkill/batch`,
     method: 'post',
-    data: skillList
+    data: { userId, skillList }
   });
 }
 
 // 技能认证
-export function certifySkill(userSkillId: number, certifiedRemark: string) {
+export function certifySkill(userSkillId: string, certifiedRemark: string) {
   return request({
     url: `/hit/userSkill/certify/${userSkillId}`,
-    method: 'post',
-    params: { certifiedRemark }
+    method: 'put',
+    data: { certifiedRemark }
   });
 }

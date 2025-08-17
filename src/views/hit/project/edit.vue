@@ -188,7 +188,7 @@ const formRef = ref();
 const submitting = ref(false);
 const pageLoading = ref(true);
 
-const projectId = Number(route.params.id);
+const projectId = route.params.id as string;
 
 // 添加图片上传相关配置
 const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload');
@@ -361,7 +361,7 @@ const handleBack = () => {
 
 // 生命周期
 onMounted(() => {
-  if (!projectId || isNaN(projectId)) {
+  if (!projectId) {
     ElMessage.error('项目ID无效');
     router.back();
     return;

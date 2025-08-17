@@ -369,17 +369,17 @@ const handleCreate = () => {
 };
 
 // 查看项目
-const handleView = (projectId: number) => {
+const handleView = (projectId: string) => {
   router.push(`/hit/project/detail/${projectId}`);
 };
 
 // 编辑项目
-const handleEdit = (projectId: number) => {
+const handleEdit = (projectId: string) => {
   router.push(`/hit/project/edit/${projectId}`);
 };
 
 // 管理成员
-const handleManageMembers = (projectId: number) => {
+const handleManageMembers = (projectId: string) => {
   router.push(`/hit/project/members/${projectId}`);
 };
 
@@ -412,7 +412,7 @@ const handleExportProject = (project: ProjectInfo) => {
 };
 
 // 删除项目
-const handleDeleteProject = (projectId: number) => {
+const handleDeleteProject = (projectId: string) => {
   ElMessageBox.confirm('确定要删除这个项目吗？删除后无法恢复。', '确认删除', {
     confirmButtonText: '确定删除',
     cancelButtonText: '取消',
@@ -420,11 +420,11 @@ const handleDeleteProject = (projectId: number) => {
   }).then(async () => {
     try {
       await delProject([projectId]);
-      ElMessage.success('删除成功');
+      ElMessage.success('项目删除成功');
       getProjectList();
     } catch (error) {
-      console.error('删除失败:', error);
-      ElMessage.error('删除失败');
+      console.error('删除项目失败:', error);
+      ElMessage.error('删除项目失败');
     }
   });
 };

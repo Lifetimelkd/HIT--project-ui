@@ -102,68 +102,78 @@
           </div>
         </template>
 
+        <!-- 调试信息 -->
+        <div v-if="!loading && applicationsList.length === 0" style="padding: 20px; text-align: center; color: #666">
+          <p>调试信息：</p>
+          <p>申请列表长度：{{ applicationsList.length }}</p>
+          <p>总数：{{ total }}</p>
+          <p>加载状态：{{ loading ? '加载中' : '已完成' }}</p>
+        </div>
+
         <el-table v-loading="loading" :data="applicationsList" @selection-change="handleSelectionChange" style="width: 100%">
           <el-table-column type="selection" width="55" />
           <el-table-column label="申请人" width="200">
             <template #default="{ row }">
               <div class="applicant-info">
                 <div class="applicant-avatar">
-                  <img :src="row.applicantAvatar || '/default-avatar.jpg'" :alt="row.applicantName" />
+                  <img :src="row.applicantAvatar || '/default-avatar.jpg'" :alt="row.applicantName || row.userName || '未知用户'" />
                 </div>
                 <div class="applicant-details">
-                  <div class="applicant-name">{{ row.applicantName }}</div>
-                  <div class="applicant-title">{{ row.applicantTitle || '暂无职位' }}</div>
+                  <div class="applicant-name">{{ row.applicantName || row.userName || '未知用户' }}</div>
+                  <div class="applicant-meta">
+                    <div class="applicant-title">{{ row.applicantTitle || row.applicantCollege || '暂无专业' }}</div>
+                    <div class="applicant-extra" v-if="row.applicantStudentId || row.studentId">
+                      学号: {{ row.applicantStudentId || row.studentId }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="appliedPosition" label="申请岗位" width="120" />
-          <el-table-column prop="motivation" label="申请理由" min-width="200">
+          <el-table-column label="申请岗位" width="120">
             <template #default="{ row }">
-              <el-tooltip :content="row.motivation" placement="top" :show-after="500">
-                <div class="motivation-text">{{ row.motivation }}</div>
+              {{ row.roleName }}
+            </template>
+          </el-table-column>
+          <el-table-column label="申请理由" min-width="200">
+            <template #default="{ row }">
+              <el-tooltip :content="row.applicationReason || row.motivation || ''" placement="top" :show-after="500">
+                <div class="motivation-text">{{ row.applicationReason || row.motivation || '暂无理由' }}</div>
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column label="技能标签" width="200">
+          <el-table-column label="相关经验" width="200">
             <template #default="{ row }">
-              <div class="skills-tags">
-                <el-tag
-                  v-for="skill in (row.skills || '').split(',')"
-                  :key="skill"
-                  size="small"
-                  type="info"
-                  style="margin-right: 5px; margin-bottom: 5px"
-                >
-                  {{ skill }}
-                </el-tag>
-              </div>
+              <el-tooltip :content="row.relevantExperience || ''" placement="top" :show-after="500">
+                <div class="motivation-text">{{ row.relevantExperience || '暂无经验' }}</div>
+              </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column prop="experience" label="相关经验" width="100">
+          <el-table-column label="申请状态" width="100">
             <template #default="{ row }">
-              <el-rate v-model="row.experienceLevel" disabled show-score text-color="#ff9900" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="申请状态" width="100">
-            <template #default="{ row }">
-              <el-tag :type="getApplicationStatusColor(row.status)">
-                {{ getApplicationStatusText(row.status) }}
+              <el-tag :type="getApplicationStatusColor(row.applicationStatus || row.status)">
+                {{ getApplicationStatusText(row.applicationStatus || row.status) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="applyTime" label="申请时间" width="120">
+          <el-table-column label="申请时间" width="120">
             <template #default="{ row }">
-              {{ formatDate(row.applyTime) }}
+              {{ formatDate(row.createTime || row.applyTime) }}
             </template>
           </el-table-column>
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
-                <el-button type="primary" size="small" @click="handleViewProfile(row.applicantId)"> 查看档案 </el-button>
-                <el-button v-if="row.status === 'pending'" type="success" size="small" @click="handleApprove(row)"> 通过 </el-button>
-                <el-button v-if="row.status === 'pending'" type="danger" size="small" @click="handleReject(row)"> 拒绝 </el-button>
-                <el-button v-if="row.status === 'approved'" type="warning" size="small" @click="handleRevoke(row)"> 撤销 </el-button>
+                <el-button type="primary" size="small" @click="handleViewProfile((row.userId || row.applicantId)?.toString())"> 查看档案 </el-button>
+                <el-button v-if="(row.applicationStatus || row.status) === 'pending'" type="success" size="small" @click="handleApprove(row)">
+                  通过
+                </el-button>
+                <el-button v-if="(row.applicationStatus || row.status) === 'pending'" type="danger" size="small" @click="handleReject(row)">
+                  拒绝
+                </el-button>
+                <el-button v-if="(row.applicationStatus || row.status) === 'approved'" type="warning" size="small" @click="handleRevoke(row)">
+                  撤销
+                </el-button>
               </div>
             </template>
           </el-table-column>
@@ -192,8 +202,8 @@
           <div class="applicant-profile">
             <img :src="currentApplication.applicantAvatar || '/default-avatar.jpg'" class="profile-avatar" />
             <div class="profile-info">
-              <h5>{{ currentApplication.applicantName }}</h5>
-              <p>{{ currentApplication.applicantTitle }}</p>
+              <h5>{{ currentApplication.applicantName || currentApplication.userName }}</h5>
+              <p>{{ currentApplication.applicantTitle || currentApplication.applicantCollege }}</p>
               <p>{{ currentApplication.applicantEmail }}</p>
             </div>
           </div>
@@ -203,20 +213,22 @@
           <h4>申请信息</h4>
           <el-form label-width="100px">
             <el-form-item label="申请岗位：">
-              <span>{{ currentApplication.appliedPosition }}</span>
+              <span>{{ getRoleName(currentApplication.roleId) }}</span>
             </el-form-item>
             <el-form-item label="申请理由：">
-              <p>{{ currentApplication.motivation }}</p>
+              <p>{{ currentApplication.applicationReason || currentApplication.motivation }}</p>
             </el-form-item>
             <el-form-item label="相关经验：">
-              <el-rate v-model="currentApplication.experienceLevel" disabled show-score />
+              <p>{{ currentApplication.relevantExperience || '暂无相关经验' }}</p>
             </el-form-item>
-            <el-form-item label="技能标签：">
-              <div class="skills-display">
-                <el-tag v-for="skill in (currentApplication.skills || '').split(',')" :key="skill" style="margin-right: 8px">
-                  {{ skill }}
-                </el-tag>
-              </div>
+            <el-form-item label="自我介绍：" v-if="currentApplication.selfIntroduction">
+              <p>{{ currentApplication.selfIntroduction }}</p>
+            </el-form-item>
+            <el-form-item label="预期贡献：" v-if="currentApplication.expectedContribution">
+              <p>{{ currentApplication.expectedContribution }}</p>
+            </el-form-item>
+            <el-form-item label="可投入时间：" v-if="currentApplication.availableTime">
+              <p>{{ currentApplication.availableTime }}</p>
             </el-form-item>
           </el-form>
         </div>
@@ -225,8 +237,20 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible = false">关闭</el-button>
-          <el-button v-if="currentApplication?.status === 'pending'" type="success" @click="handleApprove(currentApplication)"> 通过申请 </el-button>
-          <el-button v-if="currentApplication?.status === 'pending'" type="danger" @click="handleReject(currentApplication)"> 拒绝申请 </el-button>
+          <el-button
+            v-if="(currentApplication?.applicationStatus || currentApplication?.status) === 'pending'"
+            type="success"
+            @click="handleApprove(currentApplication)"
+          >
+            通过申请
+          </el-button>
+          <el-button
+            v-if="(currentApplication?.applicationStatus || currentApplication?.status) === 'pending'"
+            type="danger"
+            @click="handleReject(currentApplication)"
+          >
+            拒绝申请
+          </el-button>
         </div>
       </template>
     </el-dialog>
@@ -252,10 +276,14 @@ import {
   ApplicationQuery
 } from '@/api/hit/project';
 
+// 导入用户档案相关的API和接口
+import { getUserProfileByUserId, UserProfileInfo } from '@/api/hit/userProfile';
+import { getProjectRoles, ProjectRole } from '@/api/hit/project';
+
 const router = useRouter();
 const route = useRoute();
 
-const projectId = Number(route.params.id);
+const projectId = route.params.id as string;
 
 // 响应式数据
 const loading = ref(false);
@@ -266,6 +294,7 @@ const dateRange = ref<[Date, Date] | null>(null);
 const dialogVisible = ref(false);
 const currentApplication = ref<any>(null);
 const projectInfo = ref<ProjectInfo | null>(null);
+const projectRoles = ref<ProjectRole[]>([]);
 
 // 查询参数
 const queryParams = reactive({
@@ -281,18 +310,69 @@ const queryParams = reactive({
 // 获取项目信息
 const getProjectInfo = async () => {
   try {
+    console.log('正在获取项目信息，项目ID:', projectId);
     const response = await getProject(projectId);
-    projectInfo.value = response.data;
+    console.log('项目信息API响应:', response);
+
+    if (response && response.data) {
+      projectInfo.value = response.data;
+      console.log('项目信息获取成功:', projectInfo.value);
+    } else {
+      console.warn('项目信息响应格式异常:', response);
+      ElMessage.error('项目信息格式异常');
+    }
   } catch (error) {
     console.error('获取项目信息失败:', error);
-    ElMessage.error('获取项目信息失败');
+
+    // 详细的错误信息处理
+    let errorMessage = '获取项目信息失败';
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+    } else if (typeof error === 'object' && error !== null) {
+      if ('response' in error && error.response) {
+        const response = error.response as any;
+        errorMessage += `: ${response.status} ${response.statusText}`;
+        if (response.data && response.data.msg) {
+          errorMessage += ` - ${response.data.msg}`;
+        }
+      }
+    }
+
+    ElMessage.error(errorMessage);
   }
+};
+
+// 获取项目角色信息
+const getProjectRolesInfo = async () => {
+  try {
+    const response = await getProjectRoles(projectId);
+    if (response && response.code === 200) {
+      projectRoles.value = response.data || [];
+      console.log('项目角色信息获取成功:', projectRoles.value);
+    }
+  } catch (error) {
+    console.error('获取项目角色信息失败:', error);
+  }
+};
+
+// 根据角色ID获取角色名称
+const getRoleName = (roleId: string | number): string => {
+  if (!roleId) return '未指定岗位';
+  const role = projectRoles.value.find((r) => r.roleId === roleId.toString());
+  return role ? role.roleName : '未知岗位';
 };
 
 // 获取申请列表（替换模拟数据为真实API调用）
 const getApplicationsList = async () => {
   loading.value = true;
   try {
+    console.log('正在获取申请列表，参数:', {
+      projectId: projectId,
+      status: queryParams.status,
+      pageNum: queryParams.pageNum,
+      pageSize: queryParams.pageSize
+    });
+
     // 使用真实API调用替换模拟数据
     const response = await getProjectApplicationsList({
       projectId: projectId,
@@ -301,11 +381,126 @@ const getApplicationsList = async () => {
       pageSize: queryParams.pageSize
     });
 
-    applicationsList.value = response.data.rows || [];
-    total.value = response.data.total || 0;
+    console.log('申请列表API响应:', response);
+
+    // 处理后端返回的数据结构
+    if (response) {
+      let listData = [];
+      let totalCount = 0;
+
+      // 根据实际的API响应结构处理数据
+      if (response.code === 200) {
+        // 情况1: 直接在response中有rows和total
+        if (response.rows && Array.isArray(response.rows)) {
+          listData = response.rows;
+          totalCount = response.total || 0;
+        }
+        // 情况2: 在response.data中有rows和total
+        else if (response.data && response.data.rows && Array.isArray(response.data.rows)) {
+          listData = response.data.rows;
+          totalCount = response.data.total || 0;
+        }
+        // 情况3: response.data是数组
+        else if (response.data && Array.isArray(response.data)) {
+          listData = response.data;
+          totalCount = response.total || listData.length;
+        }
+        // 情况4: 其他情况，尝试直接使用response作为数据
+        else {
+          console.warn('未识别的数据格式，尝试直接使用response:', response);
+          listData = [];
+          totalCount = 0;
+        }
+      } else {
+        console.warn('API返回错误状态:', response.code, response.msg);
+        ElMessage.error(response.msg || '获取申请列表失败');
+        listData = [];
+        totalCount = 0;
+      }
+
+      // 获取申请人详细档案信息
+      if (listData.length > 0) {
+        console.log('开始获取申请人详细档案信息...');
+        const applicationsWithProfiles = await Promise.all(
+          listData.map(async (application: any) => {
+            try {
+              // 获取申请人的userId，优先使用userId，兼容applicantId
+              const userId = application.userId || application.applicantId;
+              if (userId) {
+                console.log(`正在获取用户 ${userId} 的档案信息...`);
+                const profileResponse = await getUserProfileByUserId(userId.toString());
+
+                if (profileResponse && profileResponse.code === 200 && profileResponse.data) {
+                  const profile = profileResponse.data;
+                  console.log(`用户 ${userId} 档案信息获取成功:`, profile);
+
+                  // 将档案信息合并到申请数据中
+                  return {
+                    ...application,
+                    applicantName: profile.realName || application.applicantName || application.userName,
+                    applicantAvatar: profile.avatarUrl || application.applicantAvatar,
+                    applicantTitle: profile.major || application.applicantTitle,
+                    applicantEmail: profile.email || application.applicantEmail,
+                    applicantCollege: profile.college,
+                    applicantGrade: profile.grade,
+                    applicantPhone: profile.phone,
+                    applicantStudentId: profile.studentId
+                  };
+                } else {
+                  console.warn(`获取用户 ${userId} 档案信息失败:`, profileResponse);
+                }
+              } else {
+                console.warn('申请记录缺少用户ID:', application);
+              }
+            } catch (error) {
+              console.error(`获取申请人 ${application.userId || application.applicantId} 档案信息失败:`, error);
+            }
+
+            // 如果获取档案信息失败，返回原始申请数据
+            return application;
+          })
+        );
+
+        applicationsList.value = applicationsWithProfiles;
+        console.log('申请列表及档案信息获取完成:', applicationsWithProfiles);
+      } else {
+        applicationsList.value = listData;
+      }
+
+      total.value = totalCount;
+
+      console.log('处理后的申请列表:', {
+        list: applicationsList.value,
+        total: total.value,
+        listLength: applicationsList.value.length
+      });
+
+      if (applicationsList.value.length === 0 && totalCount === 0) {
+        console.log('确认无申请数据');
+      }
+    } else {
+      console.warn('API响应为空:', response);
+      applicationsList.value = [];
+      total.value = 0;
+    }
   } catch (error) {
     console.error('获取申请列表失败:', error);
-    ElMessage.error('获取申请列表失败');
+
+    // 详细的错误信息处理
+    let errorMessage = '获取申请列表失败';
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+    } else if (typeof error === 'object' && error !== null) {
+      if ('response' in error && error.response) {
+        const response = error.response as any;
+        errorMessage += `: ${response.status} ${response.statusText}`;
+        if (response.data && response.data.msg) {
+          errorMessage += ` - ${response.data.msg}`;
+        }
+      }
+    }
+
+    ElMessage.error(errorMessage);
     applicationsList.value = [];
     total.value = 0;
   } finally {
@@ -347,21 +542,31 @@ const handleSelectionChange = (selection: any[]) => {
 };
 
 // 查看档案
-const handleViewProfile = (applicantId: number) => {
+const handleViewProfile = (applicantId: string) => {
   router.push(`/hit/userProfile/${applicantId}`);
 };
 
 // 通过申请
 const handleApprove = async (application: any) => {
   try {
-    await ElMessageBox.confirm(`确定要通过"${application.applicantName}"的申请吗？`, '确认通过', {
+    // 添加调试日志
+    console.log('准备通过申请，申请数据:', application);
+    console.log('申请ID (applicationId):', application.applicationId);
+    console.log('申请ID (id):', application.id); // 检查是否存在旧字段
+
+    if (!application.applicationId) {
+      ElMessage.error('申请ID缺失，无法操作');
+      return;
+    }
+
+    await ElMessageBox.confirm(`确定要通过"${application.applicantName || application.userName}"的申请吗？`, '确认通过', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'success'
     });
 
     // 使用真实API调用
-    await approveProjectApplication(application.id);
+    await approveProjectApplication(application.applicationId);
 
     ElMessage.success('申请已通过');
     await getApplicationsList(); // 刷新申请列表
@@ -376,6 +581,15 @@ const handleApprove = async (application: any) => {
 // 拒绝申请
 const handleReject = async (application: any) => {
   try {
+    // 添加调试日志
+    console.log('准备拒绝申请，申请数据:', application);
+    console.log('申请ID (applicationId):', application.applicationId);
+
+    if (!application.applicationId) {
+      ElMessage.error('申请ID缺失，无法操作');
+      return;
+    }
+
     const { value: reviewComment } = await ElMessageBox.prompt('请输入拒绝理由', '拒绝申请', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -384,7 +598,7 @@ const handleReject = async (application: any) => {
     });
 
     // 使用真实API调用
-    await rejectProjectApplication(application.id, reviewComment);
+    await rejectProjectApplication(application.applicationId, reviewComment);
 
     ElMessage.success('申请已拒绝');
     await getApplicationsList(); // 刷新申请列表
@@ -399,14 +613,23 @@ const handleReject = async (application: any) => {
 // 撤销申请状态
 const handleRevoke = async (application: any) => {
   try {
-    await ElMessageBox.confirm(`确定要撤销"${application.applicantName}"的申请状态吗？`, '确认撤销', {
+    // 添加调试日志
+    console.log('准备撤销申请，申请数据:', application);
+    console.log('申请ID (applicationId):', application.applicationId);
+
+    if (!application.applicationId) {
+      ElMessage.error('申请ID缺失，无法操作');
+      return;
+    }
+
+    await ElMessageBox.confirm(`确定要撤销"${application.applicantName || application.userName}"的申请状态吗？`, '确认撤销', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     });
 
     // 使用真实API调用
-    await revokeProjectApplication(application.id);
+    await revokeProjectApplication(application.applicationId);
 
     ElMessage.success('申请状态已撤销');
     await getApplicationsList(); // 刷新申请列表
@@ -425,6 +648,14 @@ const handleBatchApprove = async () => {
     return;
   }
 
+  // 验证所有选中的申请都有有效的applicationId
+  const invalidApplications = selectedApplications.value.filter((app) => !app.applicationId);
+  if (invalidApplications.length > 0) {
+    console.error('存在无效的申请ID:', invalidApplications);
+    ElMessage.error('选中的申请中存在无效的申请ID，无法操作');
+    return;
+  }
+
   try {
     await ElMessageBox.confirm(`确定要批量通过${selectedApplications.value.length}个申请吗？`, '确认批量通过', {
       confirmButtonText: '确定',
@@ -433,7 +664,7 @@ const handleBatchApprove = async () => {
     });
 
     // 使用真实API调用
-    await batchApproveApplications(selectedApplications.value.map((app) => app.id));
+    await batchApproveApplications(selectedApplications.value.map((app) => app.applicationId));
 
     ElMessage.success('批量操作完成');
     selectedApplications.value = [];
@@ -453,6 +684,14 @@ const handleBatchReject = async () => {
     return;
   }
 
+  // 验证所有选中的申请都有有效的applicationId
+  const invalidApplications = selectedApplications.value.filter((app) => !app.applicationId);
+  if (invalidApplications.length > 0) {
+    console.error('存在无效的申请ID:', invalidApplications);
+    ElMessage.error('选中的申请中存在无效的申请ID，无法操作');
+    return;
+  }
+
   try {
     const { value: reviewComment } = await ElMessageBox.prompt('请输入批量拒绝理由', '批量拒绝申请', {
       confirmButtonText: '确定',
@@ -463,7 +702,7 @@ const handleBatchReject = async () => {
 
     // 使用真实API调用
     await batchRejectApplications(
-      selectedApplications.value.map((app) => app.id),
+      selectedApplications.value.map((app) => app.applicationId),
       reviewComment
     );
 
@@ -527,12 +766,14 @@ const getApplicationStatusColor = (status: string): 'warning' | 'success' | 'dan
 
 // 生命周期
 onMounted(() => {
-  if (!projectId || isNaN(projectId)) {
+  if (!projectId) {
     ElMessage.error('项目ID无效');
     router.back();
     return;
   }
+  console.log('项目申请管理页面初始化，项目ID:', projectId);
   getProjectInfo();
+  getProjectRolesInfo(); // 获取项目角色信息
   getApplicationsList();
 });
 </script>
@@ -683,9 +924,20 @@ onMounted(() => {
       margin-bottom: 2px;
     }
 
-    .applicant-title {
+    .applicant-meta {
+      display: flex;
+      flex-direction: column;
       font-size: 0.85rem;
       color: #666;
+
+      .applicant-title {
+        margin-bottom: 2px;
+      }
+
+      .applicant-extra {
+        font-size: 0.75rem;
+        color: #999;
+      }
     }
   }
 }

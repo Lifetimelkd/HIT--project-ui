@@ -94,7 +94,7 @@
             <el-tag
               v-for="category in skillCategories"
               :key="category.value"
-              :type="activeCategory === category.value ? 'primary' : ''"
+              :type="activeCategory === category.value ? 'primary' : undefined"
               :effect="activeCategory === category.value ? 'dark' : 'plain'"
               @click="handleCategoryFilter(category.value)"
               class="category-tag"
@@ -234,6 +234,10 @@ import { Histogram, TrendCharts, InfoFilled, Search, Plus, Upload, List, Edit, D
 import * as echarts from 'echarts';
 import { getUserSkillsWithTag, addUserSkill, updateUserSkill, delUserSkill, batchSaveUserSkills } from '@/api/hit/userSkill';
 import { getSkillTagList } from '@/api/hit/skillTag';
+import { useUserStore } from '@/store/modules/user';
+
+// 用户store
+const userStore = useUserStore();
 
 // 响应式数据
 const searchKeyword = ref('');
@@ -332,8 +336,13 @@ const skillStats = computed(() => {
 // 方法
 const loadUserSkills = async () => {
   try {
-    // 这里应该传入当前用户ID，暂时使用固定值
-    const response = await getUserSkillsWithTag(1);
+    // 使用当前登录用户的ID
+    const currentUserId = userStore.userId;
+    if (!currentUserId) {
+      ElMessage.error('用户未登录，请先登录');
+      return;
+    }
+    const response = await getUserSkillsWithTag(currentUserId);
     if (response.code === 200) {
       skillList.value = response.data || [];
     }
@@ -374,7 +383,12 @@ const handleAddSkill = () => {
 
 const handleEditSkill = (skill: any) => {
   isEdit.value = true;
-  Object.assign(skillForm, skill);
+  // 处理数据类型转换，确保isCertified从number转换为boolean
+  const editData = {
+    ...skill,
+    isCertified: skill.isCertified === 1 || skill.isCertified === true
+  };
+  Object.assign(skillForm, editData);
   skillDialogVisible.value = true;
 };
 
@@ -401,7 +415,13 @@ const handleDeleteSkill = async (skill: any) => {
 
 const handleLevelChange = async (skill: any) => {
   try {
-    const response = await updateUserSkill(skill);
+    // 处理数据类型转换
+    const submitData = {
+      ...skill,
+      isCertified: skill.isCertified ? 1 : 0 // 确保boolean转换为number
+    };
+
+    const response = await updateUserSkill(submitData);
     if (response.code === 200) {
       ElMessage.success(`${skill.tagName} 等级已更新为 ${skill.skillLevel} 级`);
       updateRadarChart();
@@ -419,13 +439,25 @@ const handleSaveSkill = async () => {
     await skillFormRef.value.validate();
     loading.value = true;
 
+    // 处理数据类型转换
+    const submitData = {
+      ...skillForm,
+      isCertified: skillForm.isCertified ? 1 : 0 // 将boolean转换为number
+    };
+
     let response;
     if (isEdit.value) {
-      response = await updateUserSkill(skillForm);
+      response = await updateUserSkill(submitData);
     } else {
       // 设置当前用户ID
-      skillForm.userId = 1; // 应该从登录状态获取
-      response = await addUserSkill(skillForm);
+      const currentUserId = userStore.userId;
+      if (!currentUserId) {
+        ElMessage.error('用户未登录，请先登录');
+        loading.value = false;
+        return;
+      }
+      submitData.userId = currentUserId;
+      response = await addUserSkill(submitData);
     }
 
     if (response.code === 200) {

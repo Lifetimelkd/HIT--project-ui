@@ -128,7 +128,7 @@
                       <div class="member-info">
                         <div class="member-name">
                           {{ member.userName }}
-                          <el-tag v-if="member.isLeader === '1'" type="warning" size="small">组长</el-tag>
+                          <el-tag v-if="member.isLeader" type="warning" size="small">组长</el-tag>
                         </div>
                         <div class="member-role">{{ member.memberRole }}</div>
                       </div>
@@ -293,12 +293,35 @@ const checkUserInteractions = async () => {
 
   // 启用用户交互状态检查
   try {
-    const [likedRes, collectedRes] = await Promise.all([checkUserLiked(project.value.projectId!), checkUserCollected(project.value.projectId!)]);
-    project.value.userLiked = likedRes.data;
-    project.value.userCollected = collectedRes.data;
+    console.log('检查用户交互状态，项目ID:', project.value.projectId);
+
+    const [likedRes, collectedRes] = await Promise.all([
+      checkUserLiked(project.value.projectId!).catch((err) => {
+        console.warn('检查点赞状态失败:', err);
+        return { data: false };
+      }),
+      checkUserCollected(project.value.projectId!).catch((err) => {
+        console.warn('检查收藏状态失败:', err);
+        return { data: false };
+      })
+    ]);
+
+    console.log('点赞状态检查结果:', likedRes);
+    console.log('收藏状态检查结果:', collectedRes);
+
+    // 确保正确解析API响应中的data字段
+    project.value.userLiked = likedRes?.data === true;
+    project.value.userCollected = collectedRes?.data === true;
+
+    console.log('设置后的用户交互状态:', {
+      userLiked: project.value.userLiked,
+      userCollected: project.value.userCollected
+    });
   } catch (error) {
     // 忽略错误，可能是未登录或权限问题
     console.warn('检查用户交互状态失败:', error);
+    project.value.userLiked = false;
+    project.value.userCollected = false;
   }
 };
 
@@ -334,6 +357,7 @@ const getProjectMembers = async () => {
     // 映射成员数据，确保字段正确
     memberList.value = rawMembers.map((member: any) => ({
       memberId: member.memberId,
+      userId: member.userId || member.memberId, // 添加userId字段
       userName: member.userName || member.memberName || member.realName || '未知用户',
       email: member.email || member.contactInfo || '',
       avatarUrl: member.avatarUrl || member.avatar,
@@ -343,7 +367,7 @@ const getProjectMembers = async () => {
       skills: member.skills || member.major || '',
       joinTime: member.joinTime || '',
       status: member.status || member.memberStatus || 'active',
-      isLeader: member.isLeader,
+      isLeader: member.isLeader === '1' || member.isLeader === true, // 确保转换为布尔值
       contributionScore: member.contributionScore || 0,
       completedTasks: member.completedTasks || 0,
       totalTasks: member.totalTasks || 0
@@ -379,22 +403,44 @@ const handleLike = async () => {
   if (!project.value) return;
 
   try {
+    console.log('点赞操作，当前状态:', project.value.userLiked);
+
     if (!project.value.userLiked) {
-      await likeProject(project.value.projectId!);
+      const response = await likeProject(project.value.projectId!);
+      console.log('点赞API响应:', response);
+
+      // 操作成功后立即更新状态
       project.value.likeCount = (project.value.likeCount || 0) + 1;
       project.value.userLiked = true;
       ElMessage.success('点赞成功');
+
+      console.log('点赞成功，新状态:', {
+        likeCount: project.value.likeCount,
+        userLiked: project.value.userLiked
+      });
     } else {
-      // 暂时不支持取消点赞，等待后端实现
-      ElMessage.info('已经点赞过了');
-      // TODO: 等后端实现取消点赞接口后启用
-      // await unlikeProject(project.value.projectId!);
-      // project.value.likeCount = Math.max((project.value.likeCount || 0) - 1, 0);
-      // project.value.userLiked = false;
-      // ElMessage.success('取消点赞');
+      // 实现取消点赞功能
+      try {
+        const response = await unlikeProject(project.value.projectId!);
+        console.log('取消点赞API响应:', response);
+
+        project.value.likeCount = Math.max((project.value.likeCount || 0) - 1, 0);
+        project.value.userLiked = false;
+        ElMessage.success('取消点赞');
+
+        console.log('取消点赞成功，新状态:', {
+          likeCount: project.value.likeCount,
+          userLiked: project.value.userLiked
+        });
+      } catch (error) {
+        console.warn('取消点赞失败，可能接口未实现:', error);
+        ElMessage.info('取消点赞功能暂未实现');
+      }
     }
   } catch (error) {
-    ElMessage.error('操作失败，请先登录');
+    console.error('点赞操作失败:', error);
+    const errorMsg = error instanceof Error ? error.message : '未知错误';
+    ElMessage.error(`点赞失败: ${errorMsg}`);
   }
 };
 
@@ -403,22 +449,44 @@ const handleCollect = async () => {
   if (!project.value) return;
 
   try {
+    console.log('收藏操作，当前状态:', project.value.userCollected);
+
     if (!project.value.userCollected) {
-      await collectProject(project.value.projectId!);
+      const response = await collectProject(project.value.projectId!);
+      console.log('收藏API响应:', response);
+
+      // 操作成功后立即更新状态
       project.value.collectCount = (project.value.collectCount || 0) + 1;
       project.value.userCollected = true;
       ElMessage.success('收藏成功');
+
+      console.log('收藏成功，新状态:', {
+        collectCount: project.value.collectCount,
+        userCollected: project.value.userCollected
+      });
     } else {
-      // 暂时不支持取消收藏，等待后端实现
-      ElMessage.info('已经收藏过了');
-      // TODO: 等后端实现取消收藏接口后启用
-      // await uncollectProject(project.value.projectId!);
-      // project.value.collectCount = Math.max((project.value.collectCount || 0) - 1, 0);
-      // project.value.userCollected = false;
-      // ElMessage.success('取消收藏');
+      // 实现取消收藏功能
+      try {
+        const response = await uncollectProject(project.value.projectId!);
+        console.log('取消收藏API响应:', response);
+
+        project.value.collectCount = Math.max((project.value.collectCount || 0) - 1, 0);
+        project.value.userCollected = false;
+        ElMessage.success('取消收藏');
+
+        console.log('取消收藏成功，新状态:', {
+          collectCount: project.value.collectCount,
+          userCollected: project.value.userCollected
+        });
+      } catch (error) {
+        console.warn('取消收藏失败，可能接口未实现:', error);
+        ElMessage.info('取消收藏功能暂未实现');
+      }
     }
   } catch (error) {
-    ElMessage.error('操作失败，请先登录');
+    console.error('收藏操作失败:', error);
+    const errorMsg = error instanceof Error ? error.message : '未知错误';
+    ElMessage.error(`收藏失败: ${errorMsg}`);
   }
 };
 
