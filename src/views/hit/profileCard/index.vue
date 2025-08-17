@@ -413,8 +413,13 @@ import {
   type UserSkillInfo,
   type ShareStatsInfo
 } from '@/api/hit/userProfile';
+import { getUserSkillsWithTag } from '@/api/hit/userSkill';
+import { useUserStore } from '@/store/modules/user';
 // 导入默认头像
 import defaultAvatar from '@/assets/logo/鼠鼠.png';
+
+// 用户store
+const userStore = useUserStore();
 
 // 响应式数据
 const selectedTemplate = ref('template1');
@@ -526,14 +531,29 @@ const fetchUserProfile = async () => {
 // 获取用户技能数据
 const fetchUserSkills = async () => {
   try {
-    const response = await getUserSkills();
-    if (response.data && Array.isArray(response.data)) {
-      topSkills.value = response.data.map((skill: UserSkillInfo) => skill.skillName);
+    // 使用真实的用户技能API
+    const currentUserId = userStore.userId;
+    if (!currentUserId) {
+      console.warn('用户未登录，无法获取技能数据');
+      topSkills.value = [];
+      return;
+    }
+
+    const response = await getUserSkillsWithTag(currentUserId);
+    if (response.code === 200 && response.data && Array.isArray(response.data)) {
+      // 获取前5个技能，按技能等级排序
+      const sortedSkills = response.data
+        .sort((a: any, b: any) => (b.skillLevel || 0) - (a.skillLevel || 0))
+        .slice(0, 5);
+      topSkills.value = sortedSkills.map((skill: any) => skill.tagName || skill.skillName);
+    } else {
+      console.warn('技能数据格式不正确或为空:', response);
+      topSkills.value = [];
     }
   } catch (error) {
     console.error('获取用户技能失败:', error);
-    // 使用默认技能数据
-    topSkills.value = ['Python', 'Vue.js', '机器学习', '数据分析', '团队协作'];
+    // 使用空数组而不是默认数据
+    topSkills.value = [];
   }
 };
 
