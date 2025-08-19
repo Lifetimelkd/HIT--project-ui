@@ -245,6 +245,15 @@ export function listLikedProject(query: ProjectQuery): AxiosPromise<ProjectInfo[
   });
 }
 
+// 查询我参与的项目（作为成员）
+export function listMyMemberProjects(query: ProjectQuery): AxiosPromise<{ total: number; rows: ProjectInfo[]; code: number; msg: string }> {
+  return request({
+    url: '/hit/project/my/member-projects',
+    method: 'get',
+    params: query
+  });
+}
+
 // ==================== 统计接口 ====================
 
 // 查询项目统计信息
@@ -300,7 +309,7 @@ export interface PageResponse<T> {
 }
 
 // 查询项目成员列表 - 修改为后端实际路径
-export function getProjectMemberList(projectId: string, pageNum?: number, pageSize?: number): AxiosPromise<PageResponse<MemberInfo>> {
+export function getProjectMemberList(projectId: string, pageNum?: number, pageSize?: number): AxiosPromise<{ total: number; rows: MemberInfo[]; code: number; msg: string }> {
   return request({
     url: `/hit/project/member/project/${projectId}`,
     method: 'get',

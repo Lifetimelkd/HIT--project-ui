@@ -122,7 +122,12 @@
                   </div>
                   <div v-else class="member-list">
                     <div class="member-item" v-for="member in memberList" :key="member.memberId">
-                      <el-avatar :src="member.avatarUrl" :size="50">
+                      <el-avatar 
+                        :src="member.avatarUrl" 
+                        :size="50"
+                        @click="handleViewUserProfile(member.userId || member.memberId)"
+                        style="cursor: pointer"
+                      >
                         {{ member.userName?.charAt(0) || '?' }}
                       </el-avatar>
                       <div class="member-info">
@@ -493,6 +498,11 @@ const handleCollect = async () => {
 // 查看全部成员
 const handleViewAllMembers = () => {
   router.push(`/hit/project/members/${project.value?.projectId}`);
+};
+
+// 查看用户个人资料
+const handleViewUserProfile = (userId: string) => {
+  router.push(`/profile/profileShowcase/${userId}`);
 };
 
 // 工具函数

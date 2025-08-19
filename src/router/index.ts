@@ -65,11 +65,11 @@ export const constantRoutes: RouteRecordRaw[] = [
   {
     path: '',
     component: Layout,
-    redirect: '/index',
+    redirect: '/hit/project',
     children: [
       {
-        path: '/index',
-        component: () => import('@/views/index.vue'),
+        path: '/hit/project',
+        component: () => import('@/views/hit/project/index.vue'),
         name: 'Index',
         meta: { title: '首页', icon: 'dashboard', affix: true }
       }

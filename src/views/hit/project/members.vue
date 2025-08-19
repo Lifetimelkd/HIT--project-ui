@@ -856,9 +856,15 @@ const resetInviteForm = () => {
 };
 
 const handleViewProfile = (memberId: number) => {
-  // TODO: 等待后端实现用户资料页面后启用
-  // router.push(`/hit/userProfile/${memberId}`);
-  ElMessage.info('查看用户资料功能开发中...');
+  // 找到对应的成员信息以获取userId
+  const member = memberList.value.find(m => m.memberId === memberId);
+  const userId = member?.userId || member?.memberId;
+  
+  if (userId) {
+    router.push(`/profile/profileShowcase/${userId}`);
+  } else {
+    ElMessage.error('无法找到用户信息');
+  }
 };
 
 const handleEditMemberSkills = async (member: any) => {

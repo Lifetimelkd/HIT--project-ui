@@ -34,7 +34,7 @@ defineProps({
   }
 });
 
-const title = ref('RuoYi-Vue-Plus');
+const title = ref('Hit-Project-Team');
 const settingsStore = useSettingsStore();
 const sideTheme = computed(() => settingsStore.sideTheme);
 </script>

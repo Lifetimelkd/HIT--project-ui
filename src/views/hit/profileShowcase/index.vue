@@ -11,8 +11,20 @@
     <div class="profile-showcase">
       <!-- 页面头部 -->
       <div class="page-header">
-        <h1 class="page-title">资料展示</h1>
-        <p class="page-subtitle">展示您的个人风采，让世界看见您的才华</p>
+        <!-- 返回按钮（查看他人资料时显示） -->
+        <div v-if="!isViewingSelf" class="back-nav">
+          <el-button @click="router.back()" type="info" plain>
+            <el-icon><ArrowLeft /></el-icon>
+            返回
+          </el-button>
+        </div>
+        
+        <h1 class="page-title">
+          {{ isViewingSelf ? '我的资料展示' : userProfile.realName + ' 的资料展示' }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isViewingSelf ? '展示您的个人风采，让世界看见您的才华' : '查看用户的个人风采与专业技能' }}
+        </p>
       </div>
 
       <!-- 主要内容区域 -->
@@ -329,19 +341,22 @@
 <script setup lang="ts" name="ProfileShowcase">
 import { ref, reactive, computed, onMounted, onUnmounted, onBeforeUnmount, nextTick } from 'vue'
 import { ElMessage, ElEmpty } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import {
   Document,
   View,
   Star,
-  Timer
+  Timer,
+  ArrowLeft
 } from '@element-plus/icons-vue'
 import {
   getCurrentUserProfile,
+  getUserProfileByUserId,
   type UserProfileInfo
 } from '@/api/hit/userProfile'
 import {
   getCurrentUserPortfolios,
+  getPublicPortfolios,
   type UserPortfolioForm
 } from '@/api/hit/userPortfolio'
 import {
@@ -357,6 +372,11 @@ import defaultAvatar from '@/assets/logo/鼠鼠.png'
 // 用户store和路由
 const userStore = useUserStore()
 const router = useRouter()
+const route = useRoute()
+
+// 获取当前查看的用户ID（如果是查看他人资料）
+const viewUserId = computed(() => route.params.id as string)
+const isViewingSelf = computed(() => !viewUserId.value || viewUserId.value === userStore.userId)
 
 // 响应式数据
 const loading = ref(false)
@@ -609,7 +629,15 @@ const fetchUserProfile = async () => {
   if (isUnmounted.value || abortController?.signal.aborted) return
 
   try {
-    const response = await getCurrentUserProfile()
+    let response;
+    if (isViewingSelf.value) {
+      // 查看自己的资料
+      response = await getCurrentUserProfile()
+    } else {
+      // 查看他人的资料
+      response = await getUserProfileByUserId(viewUserId.value)
+    }
+    
     // 检查组件是否已卸载或操作被取消
     if (isUnmounted.value || abortController?.signal.aborted) return
 
@@ -621,7 +649,13 @@ const fetchUserProfile = async () => {
     if (isUnmounted.value || abortController?.signal.aborted) return
 
     console.error('ProfileShowcase: 获取用户档案失败:', error)
-    // 使用模拟数据
+    // 如果是查看他人资料失败，显示错误而不是模拟数据
+    if (!isViewingSelf.value) {
+      ElMessage.error('获取用户资料失败，该用户可能不存在或无权访问')
+      return
+    }
+    
+    // 使用模拟数据（仅限查看自己资料时）
     Object.assign(userProfile, {
       realName: '张明轩',
       college: '计算机科学与技术学院',
@@ -644,7 +678,14 @@ const fetchPortfolios = async () => {
 
   try {
     console.log('ProfileShowcase: 开始获取作品集数据...')
-    const response = await getCurrentUserPortfolios()
+    let response;
+    if (isViewingSelf.value) {
+      // 查看自己的作品集
+      response = await getCurrentUserPortfolios()
+    } else {
+      // 查看他人的公开作品集
+      response = await getPublicPortfolios(viewUserId.value)
+    }
 
     // 检查组件是否已卸载或操作被取消
     if (isUnmounted.value || abortController?.signal.aborted) return
@@ -727,16 +768,16 @@ const fetchSkills = async () => {
   if (isUnmounted.value || abortController?.signal.aborted) return
 
   try {
-    // 使用当前登录用户的ID
-    const currentUserId = userStore.userId;
-    if (!currentUserId) {
-      console.warn('ProfileShowcase: 用户未登录，无法获取技能数据');
+    // 使用查看的用户ID，如果是查看他人资料则使用他人ID，否则使用当前用户ID
+    const targetUserId = viewUserId.value || userStore.userId;
+    if (!targetUserId) {
+      console.warn('ProfileShowcase: 用户ID不存在，无法获取技能数据');
       skillList.value = [];
       stats.totalSkills = 0;
       return;
     }
 
-    const response = await getUserSkillsWithTag(currentUserId);
+    const response = await getUserSkillsWithTag(targetUserId);
 
     // 检查组件是否已卸载或操作被取消
     if (isUnmounted.value || abortController?.signal.aborted) return
@@ -772,6 +813,14 @@ const fetchProjects = async () => {
   if (isUnmounted.value || abortController?.signal.aborted) return
 
   try {
+    // 如果是查看他人资料，暂时不显示项目数据（因为没有对应的API）
+    if (!isViewingSelf.value) {
+      console.log('ProfileShowcase: 查看他人资料，暂不显示项目数据');
+      projectList.value = [];
+      stats.totalProjects = 0;
+      return;
+    }
+
     const response = await listMyProject({ pageNum: 1, pageSize: 20 })
 
     // 检查组件是否已卸载或操作被取消
@@ -1015,6 +1064,14 @@ onUnmounted(() => {
   text-align: center;
   margin-bottom: 40px;
   animation: slideInDown 0.8s ease-out;
+  position: relative;
+}
+
+.back-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
 }
 
 .page-title {
