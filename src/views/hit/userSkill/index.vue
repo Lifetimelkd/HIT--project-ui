@@ -191,7 +191,7 @@
           <el-rate v-model="skillForm.skillLevel" :max="5" show-text :texts="['了解', '熟悉', '熟练', '精通', '专家']" />
         </el-form-item>
 
-        <el-form-item label="学习时长" prop="learningTime">
+        <!-- <el-form-item label="学习时长" prop="learningTime">
           <el-input-number v-model="skillForm.learningTime" :min="0" :step="10" placeholder="小时" style="width: 100%" />
         </el-form-item>
 
@@ -201,7 +201,7 @@
 
         <el-form-item label="技能认证" prop="isCertified">
           <el-switch v-model="skillForm.isCertified" active-text="已认证" inactive-text="未认证" />
-        </el-form-item>
+        </el-form-item> -->
 
         <el-form-item label="技能描述" prop="description">
           <el-input

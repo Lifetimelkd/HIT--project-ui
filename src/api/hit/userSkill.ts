@@ -2,14 +2,15 @@ import request from '@/utils/request';
 
 // 用户技能表单对象
 export interface UserSkillForm {
-  userSkillId?: string;
+  userSkillId?: string | number;
   userId?: string | number;
-  tagId?: string;
+  tagId?: string | number;
+  skillName?: string; // 技能名称（用于前端显示）
   skillLevel: number;
   learningTime?: number;
   projectCount?: number;
   isCertified?: boolean | number; // 支持boolean和number类型
-  description?: string;
+  skillDescription?: string;
 }
 
 // 查询用户技能列表
@@ -74,9 +75,9 @@ export function getUsersBySkillTag(tagId: string) {
 // 批量保存用户技能
 export function batchSaveUserSkills(userId: string | number, skillList: UserSkillForm[]) {
   return request({
-    url: `/hit/userSkill/batch`,
+    url: `/hit/userSkill/batch/${userId}`,
     method: 'post',
-    data: { userId, skillList }
+    data: skillList
   });
 }
 

@@ -75,17 +75,17 @@
           <div class="showcase-tabs">
             <div 
               class="tab-item" 
-              :class="{ active: activeTab === 'portfolio' }"
-              @click="switchTab('portfolio')"
-            >
-              作品集
-            </div>
-            <div 
-              class="tab-item" 
               :class="{ active: activeTab === 'skills' }"
               @click="switchTab('skills')"
             >
               技能专长
+            </div>
+            <div 
+              class="tab-item" 
+              :class="{ active: activeTab === 'portfolio' }"
+              @click="switchTab('portfolio')"
+            >
+              作品集
             </div>
             <div 
               class="tab-item" 
@@ -178,23 +178,83 @@
 
           <!-- 技能专长内容 -->
           <div class="tab-content" v-show="activeTab === 'skills'">
-            <div class="skills-section" v-if="skillCategories.length > 0">
-              <div v-for="category in skillCategories" :key="category.name" class="skill-category-section">
-                <h3 class="skills-category">{{ category.icon }} {{ category.name }}</h3>
-                <div class="skills-container">
-                  <div 
-                    v-for="skill in category.skills" 
-                    :key="skill.userSkillId || skill.skillName" 
-                    class="skill-tag"
-                    :class="getSkillLevelClass(skill.skillLevel)"
+            <!-- 个人简介部分 -->
+            <div class="personal-intro-section">
+              <div class="section-header">
+                <h3 class="section-title">
+                  <el-icon><UserFilled /></el-icon>
+                  个人简介
+                </h3>
+                <div>
+                  <el-button 
+                    v-if="isViewingSelf" 
+                    type="primary" 
+                    size="small" 
+                    @click="handleEditIntro"
+                    class="edit-button"
                   >
-                    {{ skill.skillName }}
+                    <el-icon><Edit /></el-icon>
+                    编辑简介
+                  </el-button>
+                  <el-button 
+                    type="success" 
+                    size="small" 
+                    @click="testDialog"
+                  >
+                    测试对话框
+                  </el-button>
+                </div>
+              </div>
+              
+              <div class="intro-content" v-loading="introLoading">
+                <div v-if="userProfile.personalIntro" class="intro-text">
+                  <p>{{ userProfile.personalIntro }}</p>
+                </div>
+                <div v-else class="empty-intro">
+                  <el-empty :description="isViewingSelf ? '点击编辑按钮添加您的个人简介' : '该用户暂未填写个人简介'" />
+                </div>
+              </div>
+            </div>
+            
+            <!-- 技能标签部分 -->
+            <div class="skills-section" v-if="skillCategories.length > 0">
+              <div class="section-header">
+                <h3 class="section-title">
+                  <el-icon><Medal /></el-icon>
+                  技能标签
+                </h3>
+                <el-button 
+                  v-if="isViewingSelf" 
+                  type="primary" 
+                  size="small" 
+                  @click="handleManageSkills"
+                  class="edit-button"
+                >
+                  <el-icon><Plus /></el-icon>
+                  管理技能
+                </el-button>
+              </div>
+              
+              <div class="skills-animation-container">
+                <div v-for="category in skillCategories" :key="category.name" class="skill-category-section">
+                  <h3 class="skills-category">{{ category.icon }} {{ category.name }}</h3>
+                  <div class="skills-container">
+                    <div 
+                      v-for="skill in category.skills" 
+                      :key="skill.userSkillId || skill.skillName" 
+                      class="skill-tag"
+                      :class="getSkillLevelClass(skill.skillLevel)"
+                    >
+                      {{ skill.skillName }}
+                      <span class="skill-level">{{ skill.skillLevel }}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div v-else class="empty-state">
               <el-empty description="暂无技能数据" />
+              <el-button v-if="isViewingSelf" type="primary" @click="handleManageSkills">添加技能</el-button>
             </div>
           </div>
 
@@ -336,22 +396,130 @@
       </el-dialog>
     </Teleport>
   </div>
+  <!-- 个人简介编辑对话框 -->
+  <el-dialog v-model="introDialogVisible" title="编辑个人简介" width="600px" destroy-on-close>
+    <el-form>
+      <el-form-item>
+        <el-input 
+          v-model="introForm" 
+          type="textarea" 
+          :rows="6" 
+          placeholder="请输入您的个人简介..."
+          maxlength="500"
+          show-word-limit
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="introDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveIntro" :loading="introLoading">保存</el-button>
+      </div>
+    </template>
+  </el-dialog>
+  
+  <!-- 技能管理对话框 -->
+  <el-dialog v-model="skillDialogVisible" title="管理技能标签" width="700px" destroy-on-close>
+    <div class="skill-dialog-content">
+      <!-- 已添加的技能 -->
+      <div class="added-skills-section">
+        <h4>已添加的技能</h4>
+        <div class="added-skills">
+          <div v-for="skill in userSkills" :key="skill.userSkillId" class="added-skill-item">
+            <div class="skill-info">
+              <span class="skill-name">{{ skill.skillName || skill.tagName }}</span>
+              <el-slider v-model="skill.skillLevel" :min="0" :max="100" :step="5" style="width: 200px" />
+            </div>
+            <div class="skill-actions">
+              <el-button type="danger" size="small" circle @click="removeSkill(skill)">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
+          </div>
+          <div v-if="userSkills.length === 0" class="no-skills">
+            <el-empty description="暂无添加的技能" />
+          </div>
+        </div>
+      </div>
+      
+      <!-- 添加新技能 -->
+      <div class="add-skill-section">
+        <h4>添加新技能</h4>
+        <div class="add-skill-form">
+          <el-form :inline="true">
+            <el-form-item>
+              <el-input v-model="newSkill.skillName" placeholder="技能名称" />
+            </el-form-item>
+            <el-form-item>
+              <el-select v-model="newSkill.skillLevel" placeholder="熟练度">
+                <el-option label="入门 (20%)" :value="20" />
+                <el-option label="基础 (40%)" :value="40" />
+                <el-option label="熟练 (60%)" :value="60" />
+                <el-option label="精通 (80%)" :value="80" />
+                <el-option label="专家 (100%)" :value="100" />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="addNewSkill">添加</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        
+        <!-- 技能推荐 -->
+        <div class="skill-suggestions">
+          <h4>推荐技能</h4>
+          <div class="suggestion-tags">
+            <el-tag 
+              v-for="tag in suggestedTags" 
+              :key="tag.tagId" 
+              @click="selectSuggestedTag(tag)"
+              class="suggestion-tag"
+              effect="plain"
+            >
+              {{ tag.tagName }}
+            </el-tag>
+          </div>
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="skillDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveSkills" :loading="loading">保存</el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <!-- 测试对话框 -->
+  <el-dialog v-model="testDialogVisible" title="测试对话框" width="400px">
+    <div>测试对话框内容</div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="testDialogVisible = false">关闭</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts" name="ProfileShowcase">
 import { ref, reactive, computed, onMounted, onUnmounted, onBeforeUnmount, nextTick } from 'vue'
-import { ElMessage, ElEmpty } from 'element-plus'
+import { ElMessage, ElEmpty, ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import {
   Document,
   View,
   Star,
   Timer,
-  ArrowLeft
+  ArrowLeft,
+  Edit,
+  Plus,
+  UserFilled,
+  Medal,
+  Delete
 } from '@element-plus/icons-vue'
 import {
   getCurrentUserProfile,
   getUserProfileByUserId,
+  updateUserProfile,
   type UserProfileInfo
 } from '@/api/hit/userProfile'
 import {
@@ -360,12 +528,21 @@ import {
   type UserPortfolioForm
 } from '@/api/hit/userPortfolio'
 import {
-  getUserSkillsWithTag
+  getUserSkillsWithTag,
+  addUserSkill,
+  updateUserSkill,
+  delUserSkill,
+  batchSaveUserSkills
 } from '@/api/hit/userSkill'
 import {
   listMyProject,
   type ProjectInfo
 } from '@/api/hit/project'
+import {
+  getHotTags,
+  getTagsByCategory,
+  addSkillTag
+} from '@/api/hit/skillTag'
 import { useUserStore } from '@/store/modules/user'
 import defaultAvatar from '@/assets/logo/鼠鼠.png'
 
@@ -375,18 +552,34 @@ const router = useRouter()
 const route = useRoute()
 
 // 获取当前查看的用户ID（如果是查看他人资料）
-const viewUserId = computed(() => route.params.id as string)
-const isViewingSelf = computed(() => !viewUserId.value || viewUserId.value === userStore.userId)
+const viewUserId = computed(() => {
+  // 如果URL中有ID参数，则使用该参数
+  if (route.params.id) {
+    return route.params.id as string
+  }
+  // 否则使用当前登录用户的ID
+  return String(userStore.userId)
+})
+const isViewingSelf = computed(() => !route.params.id || viewUserId.value === userStore.userId)
 
 // 响应式数据
 const loading = ref(false)
-const activeTab = ref('portfolio')
+const activeTab = ref('skills')
 const avatarError = ref(false)
+const introLoading = ref(false)
 
 // 组件状态管理
 const isUnmounted = ref(false)
 const isInitializing = ref(false)
 const hasInitialized = ref(false)
+
+// 对话框控制
+const introDialogVisible = ref(false)
+const skillDialogVisible = ref(false)
+const introForm = ref('')
+
+// 测试按钮点击
+const testDialogVisible = ref(false)
 
 // 用于取消正在进行的异步操作
 let abortController: AbortController | null = null
@@ -410,6 +603,12 @@ const portfolioList = ref<ExtendedPortfolioForm[]>([])
 
 // 技能数据
 const skillList = ref<any[]>([])
+const userSkills = ref<any[]>([])
+const suggestedTags = ref<any[]>([])
+const newSkill = reactive({
+  skillName: '',
+  skillLevel: 60
+})
 
 // 项目数据
 const projectList = ref<ProjectInfo[]>([])
@@ -481,6 +680,371 @@ const skillCategories = computed(() => {
 // 方法
 const handleAvatarError = () => {
   avatarError.value = true
+}
+
+// 个人简介相关方法
+const handleEditIntro = () => {
+  console.log('点击编辑简介按钮')
+  introForm.value = userProfile.personalIntro || ''
+  introDialogVisible.value = true
+}
+
+// 测试对话框
+const testDialog = () => {
+  console.log('测试对话框按钮点击')
+  ElMessage.success('测试按钮点击成功')
+  testDialogVisible.value = true
+}
+
+const saveIntro = async () => {
+  try {
+    introLoading.value = true
+    console.log('开始保存个人简介')
+    
+    // 准备更新的数据 - 需要保留原有的所有字段
+    const updateData = {
+      ...userProfile,  // 保留原有所有字段
+      personalIntro: introForm.value
+    }
+    
+    console.log('发送的数据:', updateData)
+    const response = await updateUserProfile(updateData)
+    console.log('接口响应:', response)
+    
+    if (response.code === 200) {
+      ElMessage.success('个人简介更新成功')
+      userProfile.personalIntro = introForm.value
+      introDialogVisible.value = false
+    } else {
+      ElMessage.error(response.msg || '更新失败')
+    }
+  } catch (error) {
+    console.error('更新个人简介失败:', error)
+    ElMessage.error('更新个人简介失败')
+  } finally {
+    introLoading.value = false
+  }
+}
+
+// 技能管理相关方法
+const handleManageSkills = async () => {
+  try {
+    console.log('点击管理技能按钮')
+    loading.value = true
+    
+    // 获取用户当前技能
+    const userId = viewUserId.value
+    const response = await getUserSkillsWithTag(userId)
+    
+    if (response.code === 200 && Array.isArray(response.data)) {
+      userSkills.value = response.data.map(skill => ({
+        userSkillId: skill.userSkillId,
+        tagId: skill.tagId,
+        skillName: skill.tagName || skill.skillName,
+        skillLevel: skill.skillLevel || 50
+      }))
+    }
+    
+    // 获取推荐技能标签
+    const tagsResponse = await getHotTags()
+    if (tagsResponse.code === 200 && Array.isArray(tagsResponse.data)) {
+      // 过滤掉已添加的技能
+      const addedTagIds = userSkills.value.map(s => s.tagId).filter(id => id)
+      suggestedTags.value = tagsResponse.data.filter(tag => !addedTagIds.includes(tag.tagId))
+    }
+    
+    skillDialogVisible.value = true
+  } catch (error) {
+    console.error('获取技能数据失败:', error)
+    ElMessage.error('获取技能数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const addNewSkill = () => {
+  if (!newSkill.skillName.trim()) {
+    ElMessage.warning('请输入技能名称')
+    return
+  }
+  
+  // 检查是否已存在相同技能
+  const exists = userSkills.value.some(skill => 
+    skill.skillName.toLowerCase() === newSkill.skillName.toLowerCase()
+  )
+  
+  if (exists) {
+    ElMessage.warning('该技能已添加')
+    return
+  }
+  
+  // 检查在推荐标签中是否存在相同名称的标签
+  const existingTag = suggestedTags.value.find(tag => 
+    tag.tagName.toLowerCase() === newSkill.skillName.toLowerCase()
+  )
+  
+  // 如果在推荐标签中找到了匹配的标签，使用该标签
+  if (existingTag) {
+    userSkills.value.push({
+      tagId: existingTag.tagId,
+      skillName: existingTag.tagName,
+      skillLevel: newSkill.skillLevel
+    })
+    
+    // 从推荐中移除
+    suggestedTags.value = suggestedTags.value.filter(t => t.tagId !== existingTag.tagId)
+    
+    ElMessage.success(`使用已有标签「${existingTag.tagName}」`)
+  } else {
+    // 添加新的自定义技能
+    userSkills.value.push({
+      userSkillId: `temp-${Date.now()}`,
+      skillName: newSkill.skillName,
+      skillLevel: newSkill.skillLevel,
+      isCustom: true  // 标记为自定义技能
+    })
+    
+    ElMessage.success(`添加自定义技能「${newSkill.skillName}」`)
+  }
+  
+  // 重置表单
+  newSkill.skillName = ''
+  newSkill.skillLevel = 60
+}
+
+const selectSuggestedTag = (tag) => {
+  // 检查是否已添加
+  const exists = userSkills.value.some(skill => skill.tagId === tag.tagId)
+  if (exists) {
+    ElMessage.warning('该技能已添加')
+    return
+  }
+  
+  // 添加标签作为技能
+  userSkills.value.push({
+    tagId: tag.tagId,
+    skillName: tag.tagName,
+    skillLevel: 60
+  })
+  
+  // 从推荐中移除
+  suggestedTags.value = suggestedTags.value.filter(t => t.tagId !== tag.tagId)
+}
+
+const removeSkill = (skill) => {
+  userSkills.value = userSkills.value.filter(s => s !== skill)
+  
+  // 如果是标签技能，添加回推荐列表
+  if (skill.tagId) {
+    const tag = suggestedTags.value.find(t => t.tagId === skill.tagId)
+    if (!tag) {
+      suggestedTags.value.push({
+        tagId: skill.tagId,
+        tagName: skill.skillName
+      })
+    }
+  }
+}
+
+const saveSkills = async () => {
+  try {
+    loading.value = true
+    console.log('开始保存技能数据')
+    
+    // 准备保存的数据
+    const userId = viewUserId.value
+    const skillsToSave = userSkills.value.map(skill => {
+      // 添加类型检查和调试信息
+      console.log('处理技能:', skill, typeof skill.userSkillId)
+      
+      // 安全处理userSkillId
+      let finalUserSkillId = undefined
+      if (skill.userSkillId) {
+        if (typeof skill.userSkillId === 'string' && skill.userSkillId.startsWith('temp-')) {
+          finalUserSkillId = undefined
+        } else {
+          finalUserSkillId = skill.userSkillId
+        }
+      }
+      
+      // 将技能等级从百分比（0-100）转换为1-5的整数
+      const convertSkillLevel = (level: number): number => {
+        if (level <= 20) return 1
+        if (level <= 40) return 2
+        if (level <= 60) return 3
+        if (level <= 80) return 4
+        return 5
+      }
+      
+      return {
+        userSkillId: finalUserSkillId,
+        userId: Number(userId), // 确保userId是数字
+        tagId: skill.tagId ? Number(skill.tagId) : null, // 确保tagId是数字
+        skillName: skill.skillName, // 保留skillName用于创建标签
+        skillLevel: convertSkillLevel(skill.skillLevel || 50)
+      }
+    })
+    
+    console.log('要保存的技能数据:', { userId, skillsToSave })
+    
+    // 先处理自定义技能，为没有tagId的技能创建标签
+    for (let i = 0; i < skillsToSave.length; i++) {
+      const skill = skillsToSave[i]
+      
+      // 如果没有tagId，说明是自定义技能，需要先创建标签
+      if (!skill.tagId && skill.skillName) {
+        try {
+          console.log('创建新标签:', skill.skillName)
+          
+          // 创建新标签
+          const tagData = {
+            tagName: skill.skillName,
+            tagCategory: 'custom', // 使用custom分类表示自定义标签
+            tagDescription: `用户自定义技能: ${skill.skillName}`
+          }
+          
+                      const tagResponse = await addSkillTag(tagData)
+            console.log('标签创建响应:', tagResponse)
+            
+            if (tagResponse.code === 200 && tagResponse.data) {
+              // 后端现在直接返回tagId
+              skill.tagId = tagResponse.data
+              console.log('标签创建成功，分配的tagId:', skill.tagId)
+            } else {
+              console.warn('标签创建失败，将使用原始数据保存技能:', tagResponse.msg || '未知错误')
+            }
+        } catch (tagError) {
+          console.error('创建标签异常:', tagError)
+          // 继续处理下一个技能
+        }
+      }
+    }
+    
+    console.log('处理后的技能数据:', skillsToSave)
+    
+    // 尝试使用批量保存API
+    try {
+      // 先测试批量保存是否可用
+      console.log('准备调用批量保存API:', { userId, skillsToSave })
+      
+      // 检查批量保存函数是否存在
+      if (typeof batchSaveUserSkills !== 'function') {
+        console.error('批量保存函数不存在，将尝试逐个保存')
+        throw new Error('批量保存函数不存在')
+      }
+      
+      // 移除skillName字段，因为后端不需要
+      const skillsForBackend = skillsToSave.map(skill => ({
+        userSkillId: skill.userSkillId,
+        userId: skill.userId,
+        tagId: skill.tagId,
+        skillLevel: skill.skillLevel
+      }))
+      
+      const batchResponse = await batchSaveUserSkills(userId, skillsForBackend)
+      console.log('批量保存响应:', batchResponse)
+      
+      if (batchResponse && batchResponse.code === 200) {
+        ElMessage.success('技能保存成功')
+        skillDialogVisible.value = false
+        await fetchSkills()
+        return
+      } else {
+        console.warn('批量保存失败，将尝试逐个保存:', batchResponse)
+      }
+    } catch (batchError) {
+      console.error('批量保存异常，将尝试逐个保存:', batchError)
+    }
+    
+    // 批量保存失败，尝试逐个保存方式
+    let hasError = false
+    
+    // 先删除现有技能，再重新添加
+    try {
+      // 检查getUserSkillsWithTag函数是否存在
+      if (typeof getUserSkillsWithTag !== 'function') {
+        console.error('getUserSkillsWithTag函数不存在')
+        throw new Error('getUserSkillsWithTag函数不存在')
+      }
+      
+      // 获取现有技能的ID列表
+      console.log('获取现有技能，用户ID:', userId)
+      const existingSkillsResponse = await getUserSkillsWithTag(userId)
+      console.log('现有技能响应:', existingSkillsResponse)
+      
+      if (existingSkillsResponse && existingSkillsResponse.code === 200 && Array.isArray(existingSkillsResponse.data)) {
+        const existingSkillIds = existingSkillsResponse.data
+          .filter(s => s && s.userSkillId) // 去除可能的null值
+          .map(s => s.userSkillId)
+        
+        if (existingSkillIds && existingSkillIds.length > 0) {
+          console.log('删除现有技能:', existingSkillIds)
+          
+          // 检查delUserSkill函数是否存在
+          if (typeof delUserSkill !== 'function') {
+            console.error('delUserSkill函数不存在')
+            throw new Error('delUserSkill函数不存在')
+          }
+          
+          const deleteResponse = await delUserSkill(existingSkillIds)
+          console.log('删除响应:', deleteResponse)
+        } else {
+          console.log('没有现有技能需要删除')
+        }
+      }
+    } catch (deleteError) {
+      console.error('删除现有技能失败:', deleteError)
+      // 继续执行，尝试添加新技能
+    }
+    
+    // 添加新技能
+    for (const skill of skillsToSave) {
+      try {
+        // 确保数据格式正确（移除skillName字段）
+        const skillData = {
+          // 不传入userSkillId，让后端自动生成
+          userId: Number(userId),
+          tagId: skill.tagId ? Number(skill.tagId) : null,  // 确保tagId是数字
+          skillLevel: skill.skillLevel  // 已经转换过的1-5等级
+        }
+        
+        console.log('添加单个技能:', skillData)
+        
+        // 检查addUserSkill函数是否存在
+        if (typeof addUserSkill !== 'function') {
+          console.error('addUserSkill函数不存在')
+          hasError = true
+          continue
+        }
+        
+        const response = await addUserSkill(skillData)
+        console.log('添加技能响应:', response)
+        
+        if (!response || response.code !== 200) {
+          console.error('添加技能失败:', skillData, response)
+          hasError = true
+        }
+      } catch (addError) {
+        console.error('添加技能异常:', skill, addError)
+        hasError = true
+      }
+    }
+    
+    if (!hasError) {
+      ElMessage.success('技能保存成功')
+      skillDialogVisible.value = false
+      
+      // 重新加载技能数据
+      await fetchSkills()
+    } else {
+      ElMessage.warning('部分技能保存失败，请重试')
+    }
+  } catch (error) {
+    console.error('保存技能失败:', error)
+    ElMessage.error('保存技能失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 const switchTab = (tab: string) => {
@@ -769,7 +1333,7 @@ const fetchSkills = async () => {
 
   try {
     // 使用查看的用户ID，如果是查看他人资料则使用他人ID，否则使用当前用户ID
-    const targetUserId = viewUserId.value || userStore.userId;
+    const targetUserId = viewUserId.value || String(userStore.userId);
     if (!targetUserId) {
       console.warn('ProfileShowcase: 用户ID不存在，无法获取技能数据');
       skillList.value = [];
@@ -1149,6 +1713,7 @@ onUnmounted(() => {
 /* 左侧个人信息卡片 */
 .personal-info {
   animation: slideInLeft 0.8s ease-out;
+  transition: all 0.3s ease;
 }
 
 .avatar-section {
@@ -1388,6 +1953,170 @@ onUnmounted(() => {
 /* 技能展示 */
 .skills-section {
   padding: 10px 0;
+}
+
+/* 个人简介部分 */
+.personal-intro-section {
+  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.personal-intro-section:hover {
+  box-shadow: 0 8px 25px rgba(64, 158, 255, 0.2);
+  border-color: rgba(64, 158, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.intro-content {
+  min-height: 100px;
+  position: relative;
+}
+
+.intro-text {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  font-size: 1.05rem;
+  text-align: justify;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.empty-intro {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.edit-button {
+  transition: all 0.3s ease;
+}
+
+.edit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+/* 技能动画容器 */
+.skills-animation-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 技能标签动画 */
+.skill-tag {
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.skill-tag:hover::before {
+  left: 100%;
+}
+
+.skill-level {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* 技能对话框样式 */
+.skill-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.added-skills-section, 
+.add-skill-section {
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.added-skills {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.added-skill-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.added-skill-item:last-child {
+  border-bottom: none;
+}
+
+.skill-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.skill-name {
+  min-width: 100px;
+  font-weight: 500;
+}
+
+.no-skills {
+  padding: 20px 0;
+}
+
+.skill-suggestions {
+  margin-top: 20px;
+}
+
+.suggestion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.suggestion-tag {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.suggestion-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .skill-category-section {

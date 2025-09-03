@@ -38,6 +38,25 @@ export const constantRoutes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/profile',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: 'profileShowcase',
+        component: () => import('@/views/hit/profileShowcase/index.vue'),
+        name: 'ProfileShowcase',
+        meta: { title: '个人展示', icon: 'user' }
+      },
+      {
+        path: 'profileShowcase/:id',
+        component: () => import('@/views/hit/profileShowcase/index.vue'),
+        name: 'UserProfileShowcase',
+        meta: { title: '用户展示', icon: 'user' }
+      }
+    ]
+  },
+  {
     path: '/social-callback',
     hidden: true,
     component: () => import('@/layout/components/SocialCallback/index.vue')
