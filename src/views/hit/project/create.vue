@@ -316,7 +316,7 @@
                 </el-radio-group>
               </el-form-item>
 
-              <el-form-item label="特殊标记">
+              <!-- <el-form-item label="特殊标记">
                 <div class="special-flags">
                   <el-checkbox-group v-model="specialFlags">
                     <div class="flag-options">
@@ -341,7 +341,7 @@
                     </div>
                   </el-checkbox-group>
                 </div>
-              </el-form-item>
+              </el-form-item> -->
 
               <el-form-item label="联系方式" prop="contactInfo">
                 <el-input v-model="extraFields.contactInfo" placeholder="请输入联系方式（QQ、微信、邮箱等）" maxlength="100" />

@@ -280,6 +280,10 @@ import {
 import { getUserProfileByUserId, UserProfileInfo } from '@/api/hit/userProfile';
 import { getProjectRoles, ProjectRole } from '@/api/hit/project';
 
+// 导入通知相关API
+import { sendNotification } from '@/api/hit/notification';
+import { NotificationForm } from '@/api/hit/notification/types';
+
 const router = useRouter();
 const route = useRoute();
 
@@ -543,7 +547,8 @@ const handleSelectionChange = (selection: any[]) => {
 
 // 查看档案
 const handleViewProfile = (applicantId: string) => {
-  router.push(`/hit/userProfile/${applicantId}`);
+  // 修改路径与项目详情页中的用户头像点击跳转一致
+  router.push(`/profile/profileShowcase/${applicantId}`);
 };
 
 // 通过申请
@@ -566,6 +571,7 @@ const handleApprove = async (application: any) => {
     });
 
     // 使用真实API调用
+    // 后端API会自动发送通知给申请人，前端不需要重复发送
     await approveProjectApplication(application.applicationId);
 
     ElMessage.success('申请已通过');
@@ -598,6 +604,7 @@ const handleReject = async (application: any) => {
     });
 
     // 使用真实API调用
+    // 后端API会自动发送通知给申请人，前端不需要重复发送
     await rejectProjectApplication(application.applicationId, reviewComment);
 
     ElMessage.success('申请已拒绝');
@@ -664,6 +671,7 @@ const handleBatchApprove = async () => {
     });
 
     // 使用真实API调用
+    // 后端API会自动发送通知给申请人，前端不需要重复发送
     await batchApproveApplications(selectedApplications.value.map((app) => app.applicationId));
 
     ElMessage.success('批量操作完成');
@@ -701,6 +709,7 @@ const handleBatchReject = async () => {
     });
 
     // 使用真实API调用
+    // 后端API会自动发送通知给申请人，前端不需要重复发送
     await batchRejectApplications(
       selectedApplications.value.map((app) => app.applicationId),
       reviewComment

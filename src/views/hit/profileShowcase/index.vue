@@ -1,12 +1,12 @@
 <template>
   <div class="profile-showcase-container">
-    <!-- 背景装饰 -->
-    <div class="bg-decoration">
+    <!-- 移除可能导致渲染问题的背景装饰 -->
+    <!-- <div class="bg-decoration">
       <div class="floating-shape shape-1"></div>
       <div class="floating-shape shape-2"></div>
       <div class="floating-shape shape-3"></div>
       <div class="floating-shape shape-4"></div>
-    </div>
+    </div> -->
 
     <div class="profile-showcase">
       <!-- 页面头部 -->
@@ -196,19 +196,13 @@
                     <el-icon><Edit /></el-icon>
                     编辑简介
                   </el-button>
-                  <el-button 
-                    type="success" 
-                    size="small" 
-                    @click="testDialog"
-                  >
-                    测试对话框
-                  </el-button>
+                  
                 </div>
               </div>
               
               <div class="intro-content" v-loading="introLoading">
                 <div v-if="userProfile.personalIntro" class="intro-text">
-                  <p>{{ userProfile.personalIntro }}</p>
+                  <pre>{{ userProfile.personalIntro }}</pre>
                 </div>
                 <div v-else class="empty-intro">
                   <el-empty :description="isViewingSelf ? '点击编辑按钮添加您的个人简介' : '该用户暂未填写个人简介'" />
@@ -397,7 +391,7 @@
     </Teleport>
   </div>
   <!-- 个人简介编辑对话框 -->
-  <el-dialog v-model="introDialogVisible" title="编辑个人简介" width="600px" destroy-on-close>
+  <el-dialog v-model="introDialogVisible" title="编辑个人简介" width="600px" destroy-on-close append-to-body>
     <el-form>
       <el-form-item>
         <el-input 
@@ -419,7 +413,7 @@
   </el-dialog>
   
   <!-- 技能管理对话框 -->
-  <el-dialog v-model="skillDialogVisible" title="管理技能标签" width="700px" destroy-on-close>
+  <el-dialog v-model="skillDialogVisible" title="管理技能标签" width="700px" destroy-on-close append-to-body>
     <div class="skill-dialog-content">
       <!-- 已添加的技能 -->
       <div class="added-skills-section">
@@ -490,7 +484,7 @@
     </template>
   </el-dialog>
   <!-- 测试对话框 -->
-  <el-dialog v-model="testDialogVisible" title="测试对话框" width="400px">
+  <el-dialog v-model="testDialogVisible" title="测试对话框" width="400px" append-to-body>
     <div>测试对话框内容</div>
     <template #footer>
       <div class="dialog-footer">
@@ -501,9 +495,9 @@
 </template>
 
 <script setup lang="ts" name="ProfileShowcase">
-import { ref, reactive, computed, onMounted, onUnmounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, onBeforeUnmount, onActivated, onDeactivated, nextTick, watch } from 'vue'
 import { ElMessage, ElEmpty, ElMessageBox } from 'element-plus'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import {
   Document,
   View,
@@ -1429,7 +1423,11 @@ const initData = async () => {
 
   // 取消之前的异步操作
   if (abortController) {
-    abortController.abort()
+    try {
+      abortController.abort()
+    } catch (error) {
+      console.error('中止控制器错误:', error)
+    }
   }
   abortController = new AbortController()
 
@@ -1481,14 +1479,31 @@ const initData = async () => {
   }
 }
 
+// 监听路由参数变化，切换用户时自动刷新数据
+watch(
+  () => route.params.id,
+  () => {
+    console.log('ProfileShowcase: 路由参数变更，重新加载数据')
+    softCleanup()
+    isUnmounted.value = false
+    hasInitialized.value = false
+    initData()
+  }
+)
+
 // 清理函数
 const cleanup = () => {
   console.log('ProfileShowcase: 执行清理操作')
 
   // 取消所有异步操作
   if (abortController) {
-    abortController.abort()
-    abortController = null
+    try {
+      abortController.abort()
+    } catch (error) {
+      console.error('中止控制器错误:', error)
+    } finally {
+      abortController = null
+    }
   }
 
   // 设置卸载标志
@@ -1528,6 +1543,23 @@ const cleanup = () => {
   })
 }
 
+// 在 KeepAlive 场景下的软清理（不标记卸载，仅停止异步与关闭浮层）
+const softCleanup = () => {
+  // 取消进行中的请求
+  if (abortController) {
+    try {
+      abortController.abort()
+    } catch {}
+    abortController = null
+  }
+  // 关闭加载与对话框，避免遮罩留在 body 上影响其它页面交互
+  loading.value = false
+  introLoading.value = false
+  portfolioDetailVisible.value = false
+  skillDialogVisible.value = false
+  testDialogVisible.value = false
+}
+
 // 生命周期
 onMounted(async () => {
   console.log('ProfileShowcase: 组件挂载')
@@ -1539,23 +1571,66 @@ onMounted(async () => {
   await nextTick()
 
   // 延迟初始化，避免与路由切换冲突
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     if (!isUnmounted.value) {
       initData()
     }
   }, 50)
+
+  // 确保定时器在组件卸载时被清除
+  // 不在这里嵌套生命周期钩子，避免嵌套导致的问题
+  return () => {
+    clearTimeout(timer)
+  }
+})
+
+// KeepAlive 回来时，重新初始化数据（避免首次挂载后被缓存）
+onActivated(() => {
+  console.log('ProfileShowcase: 组件激活')
+  softCleanup()
+  isUnmounted.value = false
+  hasInitialized.value = false
+  initData()
+})
+
+// KeepAlive 离开时，停止一切异步与关闭弹层，避免遮罩阻塞其它页面
+onDeactivated(() => {
+  console.log('ProfileShowcase: 组件停用')
+  softCleanup()
+})
+
+// 仅针对本页面：离开当前页面时进行整页硬刷新，确保后续页面可正常渲染
+// 若后续彻底修复根因，可将该逻辑移除
+onBeforeRouteLeave((to, from) => {
+  try {
+    console.log('ProfileShowcase: 即将离开，执行整页刷新前往 ->', to.fullPath)
+    const href = router.resolve(to).href
+    setTimeout(() => {
+      window.location.href = href
+    }, 0)
+    return false
+  } catch (e) {
+    // 万一解析失败，回退到普通刷新
+    setTimeout(() => {
+      window.location.reload()
+    }, 0)
+    return false
+  }
 })
 
 onBeforeUnmount(() => {
   console.log('ProfileShowcase: 组件即将卸载')
-  cleanup()
+  // 只在onBeforeUnmount中执行清理，避免重复执行
+  if (!isUnmounted.value) {
+    cleanup()
+  }
 })
 
 onUnmounted(() => {
   console.log('ProfileShowcase: 组件已卸载')
-  // 确保清理操作已执行
-  if (!isUnmounted.value) {
-    cleanup()
+  // 确保abortController被正确释放
+  if (abortController) {
+    abortController = null
   }
 })
 </script>
@@ -1567,6 +1642,7 @@ onUnmounted(() => {
   color: #ffffff;
   overflow-x: hidden;
   position: relative;
+  z-index: auto;
 }
 
 /* 背景装饰元素 */
@@ -1583,7 +1659,8 @@ onUnmounted(() => {
 .floating-shape {
   position: absolute;
   background: linear-gradient(45deg, rgba(64, 158, 255, 0.1), rgba(103, 194, 58, 0.1));
-  backdrop-filter: blur(10px);
+  /* 移除可能导致渲染问题的backdrop-filter */
+  /* backdrop-filter: blur(10px); */
   animation: float 8s ease-in-out infinite;
   border: 1px solid rgba(64, 158, 255, 0.2);
 }
@@ -1667,7 +1744,8 @@ onUnmounted(() => {
 /* 毛玻璃卡片基础样式 */
 .glass-card {
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
+  /* 移除可能导致渲染问题的backdrop-filter */
+  /* backdrop-filter: blur(20px); */
   border-radius: 20px;
   border: 1px solid rgba(64, 158, 255, 0.2);
   padding: 30px;
@@ -2000,6 +2078,17 @@ onUnmounted(() => {
   padding: 10px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
+  
+  pre {
+    font-family: inherit;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
 }
 
 .empty-intro {

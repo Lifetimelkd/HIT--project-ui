@@ -167,6 +167,8 @@ import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getPublicProject, ProjectInfo, applyToProject, ApplicationForm, getAvailableProjectRoles, ProjectRole } from '@/api/hit/project';
 import { globalHeaders } from '@/utils/request';
+import { sendNotification } from '@/api/hit/notification';
+import { NotificationForm } from '@/api/hit/notification/types';
 
 const router = useRouter();
 const route = useRoute();
@@ -227,6 +229,7 @@ const getProjectInfo = async () => {
   try {
     const response = await getPublicProject(projectId);
     projectInfo.value = response.data;
+    console.log('项目信息:', projectInfo.value);
 
     // 检查项目是否可申请
     if (projectInfo.value?.recruitmentStatus !== 'open') {
@@ -310,7 +313,35 @@ const handleSubmit = async () => {
     submitting.value = true;
 
     console.log('正在提交申请，表单数据:', applicationForm);
-    await applyToProject(applicationForm);
+    const response = await applyToProject(applicationForm);
+
+    // 申请提交成功后，发送通知给项目负责人
+    if (projectInfo.value && projectInfo.value.creatorId) {
+      console.log('正在发送申请通知给项目负责人，项目负责人ID:', projectInfo.value.creatorId);
+      try {
+        // 构建通知数据
+        const notificationData: NotificationForm = {
+          notificationId: undefined, // 新通知无ID
+          userId: projectInfo.value.creatorId.toString(), // 接收者ID（项目负责人）
+          senderId: '0', // 系统发送，使用0
+          notificationType: 'application', // 通知类型：申请
+          title: '项目申请通知', // 通知标题
+          content: `有新用户申请加入您的项目「${projectInfo.value.projectName}」，请及时处理。`, // 通知内容
+          relatedId: projectId, // 关联的项目ID
+          relatedType: 'project', // 关联类型：项目
+          actionUrl: `/hit/project/applications/${projectId}`, // 操作链接：跳转到申请管理页面
+          priority: 'medium', // 优先级：中
+          channel: 'system', // 通知渠道：系统
+          deptId: '0' // 部门ID，使用0
+        };
+        
+        await sendNotification(notificationData);
+        console.log('已发送申请通知给项目负责人');
+      } catch (notifyError) {
+        console.error('发送申请通知失败:', notifyError);
+        // 通知发送失败不影响主流程
+      }
+    }
 
     ElMessage.success('申请提交成功！请等待项目负责人审核。');
     router.push(`/hit/project/detail/${projectId}`);
