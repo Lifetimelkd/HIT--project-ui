@@ -2,17 +2,16 @@
   <div class="register">
     <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
       <div class="title-box">
-        <h3 class="title">{{ title }}</h3>
+        <h3 class="title">用户注册</h3>
         <lang-select />
       </div>
-      <el-form-item v-if="tenantEnabled" prop="tenantId">
-        <el-select v-model="registerForm.tenantId" filterable :placeholder="proxy.$t('register.selectPlaceholder')" style="width: 100%">
-          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId"> </el-option>
-          <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select>
+      <el-form-item prop="nickName">
+        <el-input v-model="registerForm.nickName" type="text" size="large" auto-complete="off" placeholder="请输入用户昵称">
+          <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
+        </el-input>
       </el-form-item>
       <el-form-item prop="username">
-        <el-input v-model="registerForm.username" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('register.username')">
+        <el-input v-model="registerForm.username" type="text" size="large" auto-complete="off" placeholder="请输入用户名称（登录时使用）">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
@@ -22,7 +21,7 @@
           type="password"
           size="large"
           auto-complete="off"
-          :placeholder="proxy.$t('register.password')"
+          placeholder="请输入密码"
           @keyup.enter="handleRegister"
         >
           <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
@@ -34,7 +33,7 @@
           type="password"
           size="large"
           auto-complete="off"
-          :placeholder="proxy.$t('register.confirmPassword')"
+          placeholder="请确认密码"
           @keyup.enter="handleRegister"
         >
           <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
@@ -45,7 +44,7 @@
           v-model="registerForm.code"
           size="large"
           auto-complete="off"
-          :placeholder="proxy.$t('register.code')"
+          placeholder="请输入验证码"
           style="width: 63%"
           @keyup.enter="handleRegister"
         >
@@ -57,17 +56,17 @@
       </el-form-item>
       <el-form-item style="width: 100%">
         <el-button :loading="loading" size="large" type="primary" style="width: 100%" @click.prevent="handleRegister">
-          <span v-if="!loading">{{ proxy.$t('register.register') }}</span>
-          <span v-else>{{ proxy.$t('register.registering') }}</span>
+          <span v-if="!loading">立即注册</span>
+          <span v-else>注册中...</span>
         </el-button>
         <div style="float: right">
-          <router-link class="link-type" :to="'/login'">{{ proxy.$t('register.switchLoginPage') }}</router-link>
+          <router-link class="link-type" :to="'/login'">已有账号？去登录</router-link>
         </div>
       </el-form-item>
     </el-form>
     <!--  底部  -->
     <div class="el-register-footer">
-      <span>Copyright © 2018-2025 疯狂的狮子Li All Rights Reserved.</span>
+      <span>Copyright © 2018-2025 HIT项目组队通 All Rights Reserved.</span>
     </div>
   </div>
 </template>
@@ -86,42 +85,51 @@ const router = useRouter();
 const { t } = useI18n();
 
 const registerForm = ref<RegisterForm>({
-  tenantId: '',
+  tenantId: '000000', // 固定租户ID
   username: '',
+  nickName: '',
   password: '',
   confirmPassword: '',
   code: '',
   uuid: '',
-  userType: 'sys_user'
+  userType: 'sys_user',
+  // 设置与张三用户一致的默认值
+  deptId: '100',
+  roleIds: ['3'],
+  sex: '0',
+  status: '0'
 });
 
 // 租户开关
-const tenantEnabled = ref(true);
+const tenantEnabled = ref(false); // 关闭租户选择
 
 const equalToPassword = (rule: any, value: string, callback: any) => {
   if (registerForm.value.password !== value) {
-    callback(new Error(t('register.rule.confirmPassword.equalToPassword')));
+    callback(new Error('两次输入的密码不一致'));
   } else {
     callback();
   }
 };
 
 const registerRules: ElFormRules = {
-  tenantId: [{ required: true, trigger: 'blur', message: t('register.rule.tenantId.required') }],
+  nickName: [
+    { required: true, trigger: 'blur', message: '用户昵称不能为空' },
+    { min: 2, max: 20, message: '用户昵称长度必须介于 2 和 20 之间', trigger: 'blur' }
+  ],
   username: [
-    { required: true, trigger: 'blur', message: t('register.rule.username.required') },
-    { min: 2, max: 20, message: t('register.rule.username.length', { min: 2, max: 20 }), trigger: 'blur' }
+    { required: true, trigger: 'blur', message: '用户名称不能为空' },
+    { min: 2, max: 20, message: '用户名称长度必须介于 2 和 20 之间', trigger: 'blur' }
   ],
   password: [
-    { required: true, trigger: 'blur', message: t('register.rule.password.required') },
-    { min: 5, max: 20, message: t('register.rule.password.length', { min: 5, max: 20 }), trigger: 'blur' },
-    { pattern: /^[^<>"'|\\]+$/, message: t('register.rule.password.pattern', { strings: '< > " \' \\ |' }), trigger: 'blur' }
+    { required: true, trigger: 'blur', message: '密码不能为空' },
+    { min: 5, max: 20, message: '密码长度必须介于 5 和 20 之间', trigger: 'blur' },
+    { pattern: /^[^<>"'|\\]+$/, message: '不能包含非法字符：< > " \' \\ |', trigger: 'blur' }
   ],
   confirmPassword: [
-    { required: true, trigger: 'blur', message: t('register.rule.confirmPassword.required') },
+    { required: true, trigger: 'blur', message: '确认密码不能为空' },
     { required: true, validator: equalToPassword, trigger: 'blur' }
   ],
-  code: [{ required: true, trigger: 'change', message: t('register.rule.code.required') }]
+  code: [{ required: true, trigger: 'change', message: '验证码不能为空' }]
 };
 const codeUrl = ref('');
 const loading = ref(false);
@@ -137,7 +145,7 @@ const handleRegister = () => {
       const [err] = await to(register(registerForm.value));
       if (!err) {
         const username = registerForm.value.username;
-        await ElMessageBox.alert('<span style="color: red; ">' + t('register.registerSuccess', { username }) + '</font>', '系统提示', {
+        await ElMessageBox.alert(`<span style="color: green;">恭喜您，用户 "${username}" 注册成功！</span>`, '注册成功', {
           app: undefined,
           dangerouslyUseHTMLString: true,
           type: 'success'
@@ -186,8 +194,22 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url('../assets/images/login-background.jpg');
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-size: cover;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:0.8" /><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:0.8" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23grad1)"/><g fill="rgba(255,255,255,0.1)"><circle cx="200" cy="150" r="80"/><circle cx="800" cy="200" r="120"/><circle cx="1000" cy="600" r="100"/><circle cx="400" cy="700" r="90"/><circle cx="100" cy="500" r="60"/><circle cx="1100" cy="400" r="70"/></g></svg>') no-repeat center center;
+    background-size: cover;
+    opacity: 0.3;
+    z-index: 0;
+  }
 }
 
 .title-box {
@@ -206,16 +228,28 @@ onMounted(() => {
 }
 
 .register-form {
-  border-radius: 6px;
-  background: #ffffff;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   width: 400px;
-  padding: 25px 25px 5px 25px;
+  padding: 30px;
+  position: relative;
+  z-index: 1;
 
   .el-input {
-    height: 40px;
+    height: 45px;
 
     input {
-      height: 40px;
+      height: 45px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+      
+      &:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+      }
     }
   }
 
@@ -223,6 +257,20 @@ onMounted(() => {
     height: 39px;
     width: 14px;
     margin-left: 0;
+  }
+  
+  .el-button--primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    height: 45px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
   }
 }
 

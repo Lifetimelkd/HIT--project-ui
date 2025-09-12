@@ -4,11 +4,16 @@
 export type RegisterForm = {
   tenantId: string;
   username: string;
+  nickName?: string;
   password: string;
   confirmPassword?: string;
   code?: string;
   uuid?: string;
   userType?: string;
+  deptId?: string;
+  roleIds?: string[];
+  sex?: string;
+  status?: string;
 };
 
 /**

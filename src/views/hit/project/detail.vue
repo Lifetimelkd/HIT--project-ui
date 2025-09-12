@@ -224,7 +224,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   getProject,
   getPublicProject,
@@ -239,6 +239,7 @@ import {
   getPendingApplicationsCount,
   MemberInfo
 } from '@/api/hit/project';
+import { getCurrentUserProfile } from '@/api/hit/userProfile';
 
 // 删除本地MemberInfo接口定义，使用从API导入的接口
 // interface MemberInfo {
@@ -398,9 +399,120 @@ const handleBack = () => {
   router.back();
 };
 
+// 检查用户档案完整性
+const checkUserProfileComplete = async () => {
+  try {
+    console.log('开始检查用户档案完整性...');
+    const response = await getCurrentUserProfile();
+    
+    if (response && response.code === 200) {
+      const profile = response.data;
+      
+      // 根据个人档案页面的必填项规则检查
+      const requiredFields = {
+        realName: '真实姓名',
+        studentId: '学号',
+        college: '所属学院',
+        major: '专业',
+        grade: '年级',
+        phone: '手机号'
+      };
+      
+      const missingFields: string[] = [];
+      
+      // 检查每个必填字段
+      Object.entries(requiredFields).forEach(([field, label]) => {
+        const value = profile?.[field];
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+          missingFields.push(label);
+        }
+      });
+      
+      console.log('档案完整性检查结果:', {
+        profile,
+        missingFields,
+        isComplete: missingFields.length === 0
+      });
+      
+      return {
+        isComplete: missingFields.length === 0,
+        missingFields,
+        hasProfile: !!profile
+      };
+    } else {
+      // 如果获取档案失败，认为档案不完整
+      console.warn('获取用户档案失败:', response?.msg);
+      return {
+        isComplete: false,
+        missingFields: ['完整的个人档案'],
+        hasProfile: false
+      };
+    }
+  } catch (error) {
+    console.error('检查用户档案完整性失败:', error);
+    // 出现错误时，为了用户体验，假设档案不完整
+    return {
+      isComplete: false,
+      missingFields: ['完整的个人档案'],
+      hasProfile: false
+    };
+  }
+};
+
 // 申请加入
-const handleApply = () => {
-  router.push(`/hit/project/apply/${project.value?.projectId}`);
+const handleApply = async () => {
+  if (!project.value?.projectId) {
+    ElMessage.error('项目信息错误');
+    return;
+  }
+
+  // 检查招募状态
+  if (project.value.recruitmentStatus !== 'open') {
+    ElMessage.warning('该项目当前不接受申请');
+    return;
+  }
+
+  try {
+    // 检查用户档案完整性
+    const profileCheck = await checkUserProfileComplete();
+    
+    if (!profileCheck.isComplete) {
+      // 档案不完整，引导用户完善档案
+      const missingFieldsText = profileCheck.missingFields.join('、');
+      
+      await ElMessageBox.confirm(
+        `申请加入项目前，请先完善您的个人档案。\n\n缺少以下必填信息：${missingFieldsText}\n\n是否现在前往完善个人档案？`,
+        '需要完善个人档案',
+        {
+          confirmButtonText: '去完善档案',
+          cancelButtonText: '稍后再说',
+          type: 'info',
+          center: true,
+          customStyle: {
+            width: '500px'
+          }
+        }
+      );
+      
+      // 用户确认后跳转到个人档案页面
+      // 在URL中添加返回参数，方便用户完善后回到项目页面
+      const returnUrl = encodeURIComponent(`/hit/project/detail/${project.value.projectId}`);
+      router.push(`/profile/userProfile?return=${returnUrl}&action=complete`);
+      
+    } else {
+      // 档案完整，正常跳转到申请页面
+      console.log('用户档案完整，允许申请加入项目');
+      router.push(`/hit/project/apply/${project.value.projectId}`);
+    }
+  } catch (error) {
+    // 用户取消了对话框或其他错误
+    if (error === 'cancel') {
+      console.log('用户取消了完善档案操作');
+    } else {
+      console.error('申请加入项目时发生错误:', error);
+      ElMessage.error('操作失败，请稍后重试');
+    }
+  }
 };
 
 // 点赞

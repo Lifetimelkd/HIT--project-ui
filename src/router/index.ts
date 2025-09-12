@@ -43,6 +43,12 @@ export const constantRoutes: RouteRecordRaw[] = [
     hidden: true,
     children: [
       {
+        path: 'userProfile',
+        component: () => import('@/views/hit/userProfile/index.vue'),
+        name: 'UserProfile',
+        meta: { title: '个人档案', icon: 'peoples', noCache: true }
+      },
+      {
         path: 'profileShowcase',
         component: () => import('@/views/hit/profileShowcase/index.vue'),
         name: 'ProfileShowcase',

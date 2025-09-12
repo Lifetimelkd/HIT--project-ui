@@ -1,8 +1,8 @@
 <template>
-  <div class="p-2">
+  <div class="profile-management-container">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
-      <div v-show="showSearch" class="mb-[10px]">
-        <el-card shadow="hover">
+      <div v-show="showSearch" class="search-section">
+        <div class="glass-card search-card">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
             <el-form-item label="关联用户id" prop="userId">
               <el-input v-model="queryParams.userId" placeholder="请输入关联用户id" clearable @keyup.enter="handleQuery" />
@@ -76,13 +76,17 @@
               <el-button icon="Refresh" @click="resetQuery">重置</el-button>
             </el-form-item>
           </el-form>
-        </el-card>
+        </div>
       </div>
     </transition>
 
-    <el-card shadow="never">
-      <template #header>
-        <el-row :gutter="10" class="mb8">
+    <div class="glass-card main-card">
+      <div class="card-header">
+        <div class="header-title">
+          <h2 class="title">个人档案管理</h2>
+          <p class="subtitle">完善您的个人信息，让团队更好地了解您</p>
+        </div>
+        <el-row :gutter="10" class="header-actions">
           <el-col :span="1.5">
             <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['hitUserProfile:userProfile:add']">新增</el-button>
           </el-col>
@@ -107,9 +111,10 @@
           </el-col>
           <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
-      </template>
+      </div>
 
-      <el-table v-loading="loading" border :data="userProfileList" @selection-change="handleSelectionChange">
+      <div class="table-container">
+        <el-table v-loading="loading" :data="userProfileList" @selection-change="handleSelectionChange" class="glass-table">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="用户档案ID" align="center" prop="profileId" v-if="true" />
         <el-table-column label="关联用户id" align="center" prop="userId" />
@@ -164,13 +169,17 @@
             </el-tooltip>
           </template>
         </el-table-column>
-      </el-table>
+        </el-table>
+      </div>
 
-      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getList" />
-    </el-card>
+      <div class="pagination-container">
+        <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getList" />
+      </div>
+    </div>
     <!-- 添加或修改用户扩展档案对话框 -->
-    <el-dialog :title="dialog.title" v-model="dialog.visible" width="500px" append-to-body>
-      <el-form ref="userProfileFormRef" :model="form" :rules="rules" label-width="80px">
+    <el-dialog :title="dialog.title" v-model="dialog.visible" width="800px" append-to-body class="profile-dialog">
+      <div class="dialog-content">
+        <el-form ref="userProfileFormRef" :model="form" :rules="rules" label-width="100px" class="profile-form">
         <el-form-item label="关联用户id" prop="userId">
           <el-input v-model="form.userId" placeholder="请输入关联用户id" />
         </el-form-item>
@@ -238,11 +247,18 @@
         <el-form-item label="关联部门id" prop="deptId">
           <el-input v-model="form.deptId" placeholder="请输入关联部门id" />
         </el-form-item>
-      </el-form>
+        </el-form>
+      </div>
       <template #footer>
         <div class="dialog-footer">
-          <el-button :loading="buttonLoading" type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+          <el-button :loading="buttonLoading" type="primary" @click="submitForm" class="submit-btn">
+            <el-icon class="mr-2"><Check /></el-icon>
+            确 定
+          </el-button>
+          <el-button @click="cancel" class="cancel-btn">
+            <el-icon class="mr-2"><Close /></el-icon>
+            取 消
+          </el-button>
         </div>
       </template>
     </el-dialog>
@@ -328,27 +344,52 @@ const data = reactive<PageData<UserProfileForm, UserProfileQuery>>({
     params: {}
   },
   rules: {
+    userId: [{ required: true, message: '关联用户ID不能为空', trigger: 'blur' }],
     studentId: [{ required: true, message: '学号不能为空', trigger: 'blur' }],
     realName: [{ required: true, message: '真实姓名不能为空', trigger: 'blur' }],
     college: [{ required: true, message: '所属学院不能为空', trigger: 'change' }],
     major: [{ required: true, message: '专业不能为空', trigger: 'blur' }],
     grade: [{ required: true, message: '年级不能为空', trigger: 'change' }],
     className: [{ required: true, message: '班级不能为空', trigger: 'blur' }],
-    phone: [{ required: true, message: '手机号不能为空', trigger: 'blur' }],
-    email: [{ required: true, message: '邮箱不能为空', trigger: 'blur' }],
-    qq: [{ required: true, message: 'QQ号不能为空', trigger: 'blur' }],
+    phone: [
+      { required: true, message: '手机号不能为空', trigger: 'blur' },
+      { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
+    ],
+    email: [
+      { required: true, message: '邮箱不能为空', trigger: 'blur' },
+      { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    ],
+    qq: [
+      { required: true, message: 'QQ号不能为空', trigger: 'blur' },
+      { pattern: /^[1-9]\d{4,10}$/, message: '请输入正确的QQ号格式', trigger: 'blur' }
+    ],
     wechat: [{ required: true, message: '微信号不能为空', trigger: 'blur' }],
     github: [{ required: true, message: 'GitHub地址不能为空', trigger: 'blur' }],
     linkedin: [{ required: true, message: 'LinkedIn地址不能为空', trigger: 'blur' }],
-    personalIntro: [{ required: true, message: '个人简介不能为空', trigger: 'blur' }],
-    careerPlan: [{ required: true, message: '职业规划不能为空', trigger: 'blur' }],
+    personalIntro: [
+      { required: true, message: '个人简介不能为空', trigger: 'blur' },
+      { min: 10, max: 500, message: '个人简介长度应在10-500个字符之间', trigger: 'blur' }
+    ],
+    careerPlan: [
+      { required: true, message: '职业规划不能为空', trigger: 'blur' },
+      { min: 10, max: 500, message: '职业规划长度应在10-500个字符之间', trigger: 'blur' }
+    ],
     avatarUrl: [{ required: true, message: '头像地址不能为空', trigger: 'blur' }],
     coverUrl: [{ required: true, message: '封面地址不能为空', trigger: 'blur' }],
-    reputationScore: [{ required: true, message: '信誉积分不能为空', trigger: 'blur' }],
-    totalProjects: [{ required: true, message: '参与项目总数不能为空', trigger: 'blur' }],
-    completedProjects: [{ required: true, message: '完成项目数不能为空', trigger: 'blur' }],
-    status: [{ required: true, message: '状态(0正常 1禁用)不能为空', trigger: 'change' }],
-    deptId: [{ required: true, message: '关联部门id不能为空', trigger: 'blur' }]
+    reputationScore: [
+      { required: true, message: '信誉积分不能为空', trigger: 'blur' },
+      { type: 'number', min: 0, max: 1000, message: '信誉积分应在0-1000之间', trigger: 'blur', transform: (value: string) => Number(value) }
+    ],
+    totalProjects: [
+      { required: true, message: '参与项目总数不能为空', trigger: 'blur' },
+      { type: 'number', min: 0, message: '参与项目总数不能为负数', trigger: 'blur', transform: (value: string) => Number(value) }
+    ],
+    completedProjects: [
+      { required: true, message: '完成项目数不能为空', trigger: 'blur' },
+      { type: 'number', min: 0, message: '完成项目数不能为负数', trigger: 'blur', transform: (value: string) => Number(value) }
+    ],
+    status: [{ required: true, message: '状态不能为空', trigger: 'change' }],
+    deptId: [{ required: true, message: '关联部门ID不能为空', trigger: 'blur' }]
   }
 });
 
@@ -452,3 +493,214 @@ onMounted(() => {
   getList();
 });
 </script>
+
+<style scoped lang="scss">
+.profile-management-container {
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: 100vh;
+  
+  .search-section {
+    margin-bottom: 20px;
+  }
+  
+  .glass-card {
+    background: #ffffff;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    &.search-card {
+      margin-bottom: 0;
+      
+      :deep(.el-form) {
+        .el-form-item {
+          margin-bottom: 16px;
+          
+          .el-form-item__label {
+            color: #606266;
+            font-weight: 500;
+          }
+        }
+        
+        .el-button {
+          border-radius: 4px;
+        }
+      }
+    }
+    
+    &.main-card {
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ebeef5;
+        
+        .header-title {
+          .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #303133;
+            margin: 0 0 8px 0;
+          }
+          
+          .subtitle {
+            font-size: 14px;
+            color: #909399;
+            margin: 0;
+          }
+        }
+        
+        .header-actions {
+          :deep(.el-button) {
+            border-radius: 4px;
+            margin-left: 8px;
+          }
+        }
+      }
+      
+      .table-container {
+        :deep(.glass-table) {
+          background: #ffffff;
+          border: 1px solid #ebeef5;
+          border-radius: 4px;
+        }
+      }
+      
+      .pagination-container {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+:deep(.profile-dialog) {
+  .el-dialog {
+    background: #ffffff;
+    border: 1px solid #ebeef5;
+    border-radius: 8px;
+    
+    .el-dialog__header {
+      background: #f5f7fa;
+      border-bottom: 1px solid #ebeef5;
+      
+      .el-dialog__title {
+        color: #303133;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+    
+    .el-dialog__body {
+      background: #ffffff;
+      
+      .dialog-content {
+        .profile-form {
+          .el-form-item {
+            margin-bottom: 20px;
+            
+            .el-form-item__label {
+              color: #606266;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+    
+    .el-dialog__footer {
+      background: #f5f7fa;
+      border-top: 1px solid #ebeef5;
+      
+      .dialog-footer {
+        text-align: center;
+        
+        .submit-btn, .cancel-btn {
+          border-radius: 4px;
+          padding: 12px 24px;
+        }
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .profile-management-container {
+    padding: 12px;
+    
+    .glass-card {
+      padding: 16px;
+      
+      &.main-card {
+        .card-header {
+          flex-direction: column;
+          gap: 16px;
+          
+          .header-actions {
+            width: 100%;
+            
+            :deep(.el-row) {
+              flex-wrap: wrap;
+              gap: 8px;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  :deep(.profile-dialog) {
+    .el-dialog {
+      width: 95% !important;
+      margin: 20px auto !important;
+    }
+  }
+}
+
+// 动画效果
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// 滚动条样式
+:deep(::-webkit-scrollbar) {
+  width: 6px;
+  height: 6px;
+}
+
+:deep(::-webkit-scrollbar-track) {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+:deep(::-webkit-scrollbar-thumb) {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+</style>

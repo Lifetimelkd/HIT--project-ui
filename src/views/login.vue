@@ -118,7 +118,7 @@ const captchaEnabled = ref(true);
 const tenantEnabled = ref(true);
 
 // 注册开关
-const register = ref(false);
+const register = ref(true);
 const redirect = ref('/');
 const loginRef = ref<ElFormInstance>();
 // 租户列表
@@ -236,8 +236,22 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url('../assets/images/login-background.jpg');
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-size: cover;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:0.8" /><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:0.8" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23grad1)"/><g fill="rgba(255,255,255,0.1)"><circle cx="200" cy="150" r="80"/><circle cx="800" cy="200" r="120"/><circle cx="1000" cy="600" r="100"/><circle cx="400" cy="700" r="90"/><circle cx="100" cy="500" r="60"/><circle cx="1100" cy="400" r="70"/></g></svg>') no-repeat center center;
+    background-size: cover;
+    opacity: 0.3;
+    z-index: 0;
+  }
 }
 
 .title-box {
@@ -256,15 +270,27 @@ onMounted(() => {
 }
 
 .login-form {
-  border-radius: 6px;
-  background: #ffffff;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   width: 400px;
-  padding: 25px 25px 5px 25px;
+  padding: 30px;
+  position: relative;
   z-index: 1;
+
   .el-input {
-    height: 40px;
+    height: 45px;
     input {
-      height: 40px;
+      height: 45px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+      
+      &:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+      }
     }
   }
 
@@ -272,6 +298,20 @@ onMounted(() => {
     height: 39px;
     width: 14px;
     margin-left: 0px;
+  }
+
+  .el-button--primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    height: 45px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
   }
 }
 
