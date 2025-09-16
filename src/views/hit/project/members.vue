@@ -14,6 +14,10 @@
           <p class="page-subtitle" v-if="projectInfo">{{ projectInfo.projectName }}</p>
         </div>
         <div class="header-right">
+          <el-button v-if="showManagementFeatures && isProjectLeader" type="success" @click="handleCreateRoleClick" style="margin-right: 10px">
+            <el-icon><Edit /></el-icon>
+            创建角色
+          </el-button>
           <el-button v-if="showManagementFeatures && isProjectLeader" type="primary" @click="handleInviteMember">
             <el-icon><Plus /></el-icon>
             邀请成员
@@ -285,6 +289,44 @@
       </template>
     </el-dialog>
 
+    <!-- 创建角色对话框 -->
+    <el-dialog v-model="createRoleDialogVisible" title="创建新角色" width="500px">
+      <el-form :model="createRoleForm" :rules="createRoleRules" ref="createRoleFormRef" label-width="100px">
+        <el-form-item label="角色名称" prop="roleName">
+          <el-input v-model="createRoleForm.roleName" placeholder="请输入角色名称" maxlength="20" show-word-limit />
+        </el-form-item>
+        
+        <el-form-item label="角色描述" prop="roleDescription">
+          <el-input 
+            v-model="createRoleForm.roleDescription" 
+            type="textarea" 
+            :rows="3" 
+            placeholder="请输入角色描述" 
+            maxlength="100" 
+            show-word-limit 
+          />
+        </el-form-item>
+        
+        <el-form-item label="需求人数" prop="requiredCount">
+          <el-input-number v-model="createRoleForm.requiredCount" :min="1" :max="10" />
+        </el-form-item>
+        
+        <el-form-item label="技能要求" prop="requiredSkills">
+          <el-input 
+            v-model="createRoleForm.requiredSkills" 
+            placeholder="请输入技能要求，用逗号分隔" 
+            maxlength="100" 
+            show-word-limit 
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="createRoleDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleCreateRole" :loading="createRoleLoading">创建角色</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 技能编辑对话框 -->
     <el-dialog
       v-model="skillDialogVisible"
@@ -404,7 +446,10 @@ import {
   getProjectRoles,
   getAvailableProjectRoles,
   ProjectRoleInfo,
-  updateProjectRoleCount
+  updateProjectRoleCount,
+  createProjectRole,
+  checkProjectRoleNameExists,
+  ProjectRoleForm
 } from '@/api/hit/project';
 
 // 添加系统用户相关接口导入
@@ -425,6 +470,32 @@ const projectId = computed(() => route.params.id as string); // 使用string类�
 
 // 新增：用户store
 const userStore = useUserStore();
+
+// 创建角色相关
+const createRoleDialogVisible = ref(false);
+const createRoleFormRef = ref();
+const createRoleLoading = ref(false);
+const createRoleForm = reactive({
+  projectId: computed(() => projectId.value),
+  roleName: '',
+  roleDescription: '',
+  requiredCount: 1,
+  requiredSkills: '',
+  isLeader: '0', // 非领导角色
+  status: '0' // 招募中
+});
+
+// 创建角色表单验证规则
+const createRoleRules = {
+  roleName: [
+    { required: true, message: '请输入角色名称', trigger: 'blur' },
+    { min: 2, max: 20, message: '角色名称长度在2到20个字符之间', trigger: 'blur' }
+  ],
+  requiredCount: [
+    { required: true, message: '请输入需求人数', trigger: 'blur' },
+    { type: 'number', min: 1, message: '需求人数必须大于0', trigger: 'blur' }
+  ]
+};
 
 // 响应式数据
 const loading = ref(false);
@@ -463,7 +534,7 @@ const inviteForm = reactive({
   inviteType: 'email',
   email: '',
   userId: null,
-  role: '普通成员', // 使用默认角色名称而不是英文代码
+  role: '组员', // 默认使用"组员"角色
   message: ''
 });
 
@@ -739,6 +810,60 @@ const handleBack = () => {
   router.go(-1);
 };
 
+// 创建角色相关方法
+const handleCreateRoleClick = () => {
+  // 重置表单
+  if (createRoleFormRef.value) {
+    createRoleFormRef.value.resetFields();
+  } else {
+    createRoleForm.roleName = '';
+    createRoleForm.roleDescription = '';
+    createRoleForm.requiredCount = 1;
+    createRoleForm.requiredSkills = '';
+  }
+  createRoleDialogVisible.value = true;
+};
+
+const handleCreateRole = async () => {
+  try {
+    await createRoleFormRef.value?.validate();
+    
+    createRoleLoading.value = true;
+    
+    // 检查角色名称是否已存在
+    const checkResponse = await checkProjectRoleNameExists(projectId.value, createRoleForm.roleName);
+    if (checkResponse.data) {
+      ElMessage.error('角色名称已存在，请使用其他名称');
+      createRoleLoading.value = false;
+      return;
+    }
+    
+    // 创建角色
+    await createProjectRole({
+      projectId: projectId.value,
+      roleName: createRoleForm.roleName,
+      roleDescription: createRoleForm.roleDescription,
+      requiredCount: createRoleForm.requiredCount,
+      requiredSkills: createRoleForm.requiredSkills,
+      isLeader: '0', // 非领导角色
+      status: '0' // 招募中
+    });
+    
+    ElMessage.success('角色创建成功');
+    createRoleDialogVisible.value = false;
+    
+    // 刷新角色列表
+    await getProjectRolesList();
+    await getAvailableRolesList();
+    
+  } catch (error) {
+    console.error('创建角色失败:', error);
+    ElMessage.error('创建角色失败，请检查表单信息');
+  } finally {
+    createRoleLoading.value = false;
+  }
+};
+
 // 用户选择相关方法
 const handleOpenUserSelector = async () => {
   userSelectorVisible.value = true;
@@ -846,8 +971,12 @@ const resetInviteForm = () => {
   inviteForm.inviteType = 'email';
   inviteForm.email = '';
   inviteForm.userId = null;
-  // 使用第一个可用角色或默认值
-  inviteForm.role = availableRoles.value.length > 0 ? availableRoles.value[0].roleName : '普通成员';
+  
+  // 优先查找"组员"角色，如果没有则使用第一个可用角色
+  const memberRole = availableRoles.value.find(role => role.roleName === '组员');
+  inviteForm.role = memberRole ? memberRole.roleName : 
+                   (availableRoles.value.length > 0 ? availableRoles.value[0].roleName : '组员');
+  
   inviteForm.message = '';
   // 重置用户选择相关字段
   selectedUserDisplay.value = '';

@@ -203,66 +203,19 @@
                 </div>
               </el-form-item>
 
-              <el-form-item label="招募岗位设置">
-                <div class="recruitment-positions">
-                  <!-- 说明信息 -->
+              <!-- 团队成员说明 -->
+              <el-form-item>
+                <div class="team-members-info">
                   <el-alert type="info" show-icon :closable="false" class="position-info">
-                    <template #title> 招募岗位说明 </template>
+                    <template #title>团队成员说明</template>
                     <template #default>
                       <div class="info-content">
-                        <p>• <strong>岗位名称</strong>：如"前端开发工程师"、"UI设计师"等（限10字内）</p>
-                        <p>• <strong>需求人数</strong>：该岗位需要招募的人员数量</p>
-                        <p>• <strong>岗位说明</strong>：该岗位的主要职责和工作内容</p>
-                        <p>• <strong>岗位要求</strong>：该岗位需要的技能要求，用逗号分隔</p>
-                        <p>• <strong>注意</strong>：项目负责人由创建者担任，无需在此设置</p>
+                        <p>• 项目创建后，您将自动成为项目负责人</p>
+                        <p>• 其他成员将默认设置为"组员"角色</p>
+                        <p>• 成员加入后，您可以在成员管理页面自定义设置成员角色</p>
                       </div>
                     </template>
                   </el-alert>
-
-                  <!-- 岗位列表 -->
-                  <div class="position-items">
-                    <div v-for="(position, index) in extraFields.recruitmentPositions" :key="index" class="position-item">
-                      <div class="position-row">
-                        <div class="field-group">
-                          <label class="field-label">岗位名称</label>
-                          <el-input
-                            v-model="position.positionName"
-                            placeholder="如：前端开发工程师"
-                            maxlength="10"
-                            show-word-limit
-                            style="width: 200px"
-                          />
-                        </div>
-
-                        <div class="field-group">
-                          <label class="field-label">需求人数</label>
-                          <el-input-number v-model="position.requiredCount" :min="1" :max="10" placeholder="人数" style="width: 120px" />
-                        </div>
-
-                        <div class="field-group">
-                          <label class="field-label">岗位说明</label>
-                          <el-input v-model="position.description" placeholder="如：负责产品前端界面开发和用户体验优化" style="width: 280px" />
-                        </div>
-
-                        <div class="field-group">
-                          <label class="field-label">岗位要求</label>
-                          <el-input v-model="position.requirements" placeholder="如：Vue.js,JavaScript,CSS,HTML" style="width: 250px" />
-                        </div>
-
-                        <div class="field-group action-group">
-                          <el-button type="danger" size="small" @click="removePosition(index)" :disabled="extraFields.recruitmentPositions.length <= 1">
-                            删除
-                          </el-button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 添加按钮 -->
-                  <el-button type="primary" @click="addPosition" class="add-position-btn">
-                    <el-icon><Plus /></el-icon>
-                    添加岗位
-                  </el-button>
                 </div>
               </el-form-item>
             </div>
@@ -409,16 +362,20 @@
                   </div>
                 </div>
 
-                <!-- 招募岗位确认 -->
-                <div class="summary-section" v-if="extraFields.recruitmentPositions.length > 0">
+                <!-- 团队成员确认 -->
+                <div class="summary-section">
                   <h4 class="summary-title">
                     <el-icon><UserFilled /></el-icon>
-                    招募岗位
+                    团队成员
                   </h4>
                   <div class="positions-summary">
-                    <div v-for="(position, index) in extraFields.recruitmentPositions" :key="index" class="position-summary">
-                      <div class="position-name">{{ position.positionName }}</div>
-                      <div class="position-count">{{ position.requiredCount }}人</div>
+                    <div class="position-summary">
+                      <div class="position-name">项目负责人</div>
+                      <div class="position-count">1人</div>
+                    </div>
+                    <div class="position-summary">
+                      <div class="position-name">组员</div>
+                      <div class="position-count">{{ form.teamSizeMax - 1 }}人</div>
                     </div>
                   </div>
                 </div>
@@ -557,14 +514,6 @@ const form = reactive<ProjectForm>({
 const extraFields = reactive({
   skillTags: [] as string[],
   currentMembers: 1,
-  recruitmentPositions: [
-    {
-      positionName: '',
-      requiredCount: 1,
-      description: '',
-      requirements: ''
-    }
-  ],
   recruitmentDeadline: '',
   contactInfo: ''
 });
@@ -599,7 +548,7 @@ const canProceedToStep = (step: number) => {
     case 2:
       return form.projectType && form.difficultyLevel;
     case 3:
-      return form.teamSizeMax && extraFields.recruitmentPositions.length > 0;
+      return form.teamSizeMax && form.teamSizeMax > 0;
     case 4:
       return form.startDate && form.endDate;
     default:
@@ -678,44 +627,10 @@ const getSkillTagOptions = async () => {
   }
 };
 
-// 添加招募岗位
-const addPosition = () => {
-  extraFields.recruitmentPositions.push({
-    positionName: '',
-    requiredCount: 1,
-    description: '',
-    requirements: ''
-  });
-};
-
-// 删除招募岗位
-const removePosition = (index: number) => {
-  ElMessageBox.confirm('确定要删除此岗位吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  })
-    .then(() => {
-      extraFields.recruitmentPositions.splice(index, 1);
-    })
-    .catch(() => {
-      // 用户取消删除
-    });
-};
-
-// 测试数据完整性（调试用）
-const testPositionData = () => {
-  console.log('当前招募岗位数据:', extraFields.recruitmentPositions);
-  console.log('数据长度:', extraFields.recruitmentPositions.length);
-  extraFields.recruitmentPositions.forEach((position, index) => {
-    console.log(`岗位${index + 1}:`, {
-      岗位名称: position.positionName,
-      需求人数: position.requiredCount,
-      岗位说明: position.description,
-      岗位要求: position.requirements
-    });
-  });
-};
+// 组员人数计算
+const memberCount = computed(() => {
+  return form.teamSizeMax > 1 ? form.teamSizeMax - 1 : 0;
+});
 
 // 封面上传成功
 const handleCoverSuccess = (response: any) => {
@@ -748,50 +663,9 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate();
 
-    // 调试信息：检查招募岗位数据
-    console.log('招募岗位数据:', extraFields.recruitmentPositions);
-    console.log('招募岗位数量:', extraFields.recruitmentPositions.length);
-
-    // 验证招募岗位
-    if (extraFields.recruitmentPositions.length === 0) {
-      ElMessage.error('请至少设置一个招募岗位');
-      return;
-    }
-
-    // 验证岗位信息完整性
-    for (let i = 0; i < extraFields.recruitmentPositions.length; i++) {
-      const position = extraFields.recruitmentPositions[i];
-      console.log(`检查岗位${i + 1}:`, position);
-
-      if (!position.positionName?.trim()) {
-        ElMessage.error(`第${i + 1}个岗位的名称不能为空`);
-        return;
-      }
-
-      if (!position.description?.trim()) {
-        ElMessage.error(`第${i + 1}个岗位的说明不能为空`);
-        return;
-      }
-
-      if (!position.requirements?.trim()) {
-        ElMessage.error(`第${i + 1}个岗位的要求不能为空`);
-        return;
-      }
-
-      if (!position.requiredCount || position.requiredCount <= 0) {
-        ElMessage.error(`第${i + 1}个岗位的需求人数必须大于0`);
-        return;
-      }
-    }
-
-    // 验证团队规模与岗位人数是否匹配
-    const totalRecruitmentCount = extraFields.recruitmentPositions.reduce((sum, position) => sum + position.requiredCount, 0);
-    const totalWithLeader = totalRecruitmentCount + 1; // +1项目负责人
-
-    if (totalWithLeader !== form.teamSizeMax) {
-      ElMessage.error(
-        `团队人数不匹配！岗位需求${totalRecruitmentCount}人 + 项目负责人1人 = ${totalWithLeader}人，但团队规模设置为${form.teamSizeMax}人，请调整后重试。`
-      );
+    // 验证团队规模
+    if (!form.teamSizeMax || form.teamSizeMax < 2) {
+      ElMessage.error('团队规模至少需要2人（包括项目负责人）');
       return;
     }
 
@@ -819,16 +693,23 @@ const handleSubmit = async () => {
 
     if (projectId) {
       try {
-        // 导入招募岗位创建API
-        const { createRecruitmentPositions } = await import('@/api/hit/project');
+        // 导入项目角色创建API
+        const { createProjectRole } = await import('@/api/hit/project');
 
-        // 创建招募岗位
-        await createRecruitmentPositions(projectId, extraFields.recruitmentPositions);
+        // 创建默认的组员角色
+        await createProjectRole({
+          projectId: projectId,
+          roleName: '组员',
+          roleDescription: '项目组普通成员',
+          requiredCount: form.teamSizeMax - 1, // 除去项目负责人
+          isLeader: '0', // 不是领导角色
+          status: '0' // 招募中
+        });
 
-        ElMessage.success('项目和招募岗位创建成功！');
+        ElMessage.success('项目创建成功！');
       } catch (roleError) {
-        console.warn('创建招募岗位失败，但项目创建成功:', roleError);
-        ElMessage.success('项目创建成功，但部分招募岗位创建失败，您可以稍后在项目管理中补充');
+        console.warn('创建默认角色失败，但项目创建成功:', roleError);
+        ElMessage.success('项目创建成功，但默认角色创建失败，您可以稍后在成员管理中设置');
       }
     } else {
       ElMessage.success('项目创建成功！');
